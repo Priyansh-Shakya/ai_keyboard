@@ -281,10 +281,83 @@ class AiKeyboardService : InputMethodService() {
         val ic = localIc
         if (localTarget != null && ic != null) ic.commitText(text, 1)
         else currentInputConnection?.commitText(text, 1)
+        canUndoAutoCorrect = false
+    }
+
+    private val autoCorrectMap = mapOf(
+        "teh" to "the",
+        "dont" to "don't",
+        "im" to "I'm",
+        "youre" to "you're",
+        "cant" to "can't",
+        "wont" to "won't",
+        "taht" to "that",
+        "recieve" to "receive",
+        "seperate" to "separate",
+        "definately" to "definitely",
+        "occured" to "occurred",
+        "truely" to "truly",
+        "tomorow" to "tomorrow",
+        "wich" to "which",
+        "theif" to "thief",
+        "wierd" to "weird",
+        "hvae" to "have",
+        "adn" to "and",
+        "waht" to "what"
+    )
+    private var lastAutoCorrectOriginal: String? = null
+    private var lastAutoCorrectReplacement: String? = null
+    private var canUndoAutoCorrect = false
+
+    private fun handleSpace() {
+        val target = localTarget
+        if (target != null) {
+            commit(" ")
+            canUndoAutoCorrect = false
+        } else {
+            val ic = currentInputConnection
+            if (ic != null) {
+                ic.finishComposingText()
+                val before = ic.getTextBeforeCursor(30, 0)?.toString() ?: ""
+                val word = before.trimEnd().split(Regex("\\s+")).lastOrNull() ?: ""
+                val lowerWord = word.lowercase()
+                if (word.isNotEmpty() && autoCorrectMap.containsKey(lowerWord)) {
+                    val correction = autoCorrectMap[lowerWord]!!
+                    val finalCorrection = if (word[0].isUpperCase()) correction.replaceFirstChar { it.uppercase() } else correction
+
+                    lastAutoCorrectOriginal = word
+                    lastAutoCorrectReplacement = finalCorrection
+                    canUndoAutoCorrect = true
+
+                    ic.deleteSurroundingText(word.length, 0)
+                    ic.commitText("$finalCorrection ", 1)
+                    return
+                }
+            }
+            commit(" ")
+            canUndoAutoCorrect = false
+        }
     }
 
     /** Deletes the selection if there is one, otherwise one character. */
     private fun backspace(first: Boolean = true) {
+        if (canUndoAutoCorrect && lastAutoCorrectOriginal != null && lastAutoCorrectReplacement != null) {
+            val ic = currentInputConnection
+            if (ic != null) {
+                val replacement = lastAutoCorrectReplacement!!
+                val original = lastAutoCorrectOriginal!!
+                val before = ic.getTextBeforeCursor(replacement.length + 5, 0)?.toString() ?: ""
+                if (before.endsWith("$replacement ")) {
+                    ic.deleteSurroundingText(replacement.length + 1, 0)
+                    ic.commitText(original, 1)
+                    canUndoAutoCorrect = false
+                    lastAutoCorrectOriginal = null
+                    lastAutoCorrectReplacement = null
+                    return
+                }
+            }
+        }
+        canUndoAutoCorrect = false
         val et = localTarget
         if (et != null) {
             val text = et.text
@@ -392,6 +465,66 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
+    /** Slide finger on spacebar to move cursor left or right (like Gboard). */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun makeSpacebarCursorControl(key: View) {
+        var startX = 0f
+        var lastMoveX = 0f
+        var isCursorControl = false
+        val threshold = 35f // pixels per cursor step
+
+        key.setOnTouchListener { v, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.isPressed = true
+                    startX = ev.rawX
+                    lastMoveX = ev.rawX
+                    isCursorControl = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val totalDelta = ev.rawX - startX
+                    if (!isCursorControl && kotlin.math.abs(totalDelta) > 25f) {
+                        isCursorControl = true
+                        haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
+                    }
+                    if (isCursorControl) {
+                        val stepDelta = ev.rawX - lastMoveX
+                        if (stepDelta <= -threshold) {
+                            lastMoveX = ev.rawX
+                            moveCursor(-1)
+                        } else if (stepDelta >= threshold) {
+                            lastMoveX = ev.rawX
+                            moveCursor(1)
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.isPressed = false
+                    if (!isCursorControl) {
+                        handleSpace()
+                    }
+                    isCursorControl = false
+                }
+            }
+            true
+        }
+    }
+
+    private fun moveCursor(direction: Int) {
+        val et = localTarget
+        if (et != null) {
+            val sel = et.selectionStart
+            val newSel = (sel + direction).coerceIn(0, et.text.length)
+            et.setSelection(newSel)
+        } else {
+            if (direction < 0) {
+                sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT)
+            } else {
+                sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_RIGHT)
+            }
+        }
+    }
+
     private fun enterKey() {
         when {
             localTarget === promptInput -> submitPrompt()
@@ -494,10 +627,12 @@ class AiKeyboardService : InputMethodService() {
                 }
             }
         }
-        listOf(R.id.key_comma to ",", R.id.key_period to ".", R.id.key_space to " ").forEach { (id, s) ->
+        listOf(R.id.key_comma to ",", R.id.key_period to ".").forEach { (id, s) ->
             val v = rootView.findViewById<TextView>(id)
             if (v != null) onKeyDown(v) { commit(s) }
         }
+        val spaceKey = rootView.findViewById<View>(R.id.key_space)
+        if (spaceKey != null) makeSpacebarCursorControl(spaceKey)
         val delKey = rootView.findViewById<View>(R.id.key_delete)
         if (delKey != null) makeSwipeableDelete(delKey)
         if (keyReturn != null) onTapOrHold(keyReturn, onTap = { enterKey() }, onHold = { holdEnter() })
@@ -514,7 +649,7 @@ class AiKeyboardService : InputMethodService() {
             }
         }
         val symSpace = rootView.findViewById<View>(R.id.sym_space)
-        if (symSpace != null) onKeyDown(symSpace) { commit(" ") }
+        if (symSpace != null) makeSpacebarCursorControl(symSpace)
         val symDel = rootView.findViewById<View>(R.id.sym_del2)
         if (symDel != null) makeSwipeableDelete(symDel)
         if (symReturn != null) onTapOrHold(symReturn, onTap = { enterKey() }, onHold = { holdEnter() })
