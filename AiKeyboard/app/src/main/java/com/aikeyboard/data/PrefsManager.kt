@@ -50,4 +50,44 @@ object PrefsManager {
     fun clearSession(ctx: Context) = p(ctx).edit().clear().apply()
 
     fun isLoggedIn(ctx: Context) = try { getSession(ctx) != null } catch (e: Exception) { false }
+
+    fun setVibrationEnabled(ctx: Context, enabled: Boolean) {
+        p(ctx).edit().putBoolean("vibration", enabled).apply()
+    }
+
+    fun isVibrationEnabled(ctx: Context): Boolean {
+        return p(ctx).getBoolean("vibration", false)
+    }
+
+    fun getClipboardHistory(ctx: Context): List<String> {
+        val json = p(ctx).getString("clipboard_history", "[]") ?: "[]"
+        return try {
+            com.google.gson.Gson().fromJson(json, Array<String>::class.java).toList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveClipboardHistory(ctx: Context, history: List<String>) {
+        val json = com.google.gson.Gson().toJson(history.take(100))
+        p(ctx).edit().putString("clipboard_history", json).apply()
+    }
+
+    fun addClipboardClip(ctx: Context, text: String) {
+        if (text.isBlank()) return
+        val current = getClipboardHistory(ctx).toMutableList()
+        current.remove(text)
+        current.add(0, text)
+        saveClipboardHistory(ctx, current)
+    }
+
+    fun removeClipboardClip(ctx: Context, text: String) {
+        val current = getClipboardHistory(ctx).toMutableList()
+        current.remove(text)
+        saveClipboardHistory(ctx, current)
+    }
+
+    fun clearClipboardHistory(ctx: Context) {
+        p(ctx).edit().remove("clipboard_history").apply()
+    }
 }

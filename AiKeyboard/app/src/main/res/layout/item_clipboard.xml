@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_note_card"
+    android:padding="10dp"
+    android:layout_marginBottom="6dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/clip_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/text_primary"
+        android:textSize="12sp"
+        android:maxLines="2"
+        android:ellipsize="end" />
+
+    <!-- Paste button -->
+    <TextView
+        android:id="@+id/btn_paste_clip"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:text="↵"
+        android:textSize="14sp"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:background="@drawable/bg_key_accent"
+        android:layout_marginStart="6dp" />
+
+    <!-- Delete button -->
+    <TextView
+        android:id="@+id/btn_delete_clip"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:text="✕"
+        android:textSize="11sp"
+        android:textColor="@color/brand_red"
+        android:gravity="center"
+        android:background="@drawable/bg_key_special"
+        android:layout_marginStart="4dp" />
+
+</LinearLayout>

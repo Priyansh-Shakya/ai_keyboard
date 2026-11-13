@@ -11,6 +11,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.aikeyboard.R;
@@ -56,6 +57,9 @@ public final class ActivitySetupBinding implements ViewBinding {
   public final EditText inputPassword;
 
   @NonNull
+  public final SwitchCompat switchVibration;
+
+  @NonNull
   public final TextView tvAuthStatus;
 
   @NonNull
@@ -69,8 +73,8 @@ public final class ActivitySetupBinding implements ViewBinding {
       @NonNull Button btnSelectKeyboard, @NonNull Button btnSignup,
       @NonNull LinearLayout cardSignedIn, @NonNull LinearLayout cardSignedOut,
       @NonNull EditText inputByoKey, @NonNull EditText inputEmail, @NonNull EditText inputPassword,
-      @NonNull TextView tvAuthStatus, @NonNull TextView tvKbStatus,
-      @NonNull TextView tvSignedInEmail) {
+      @NonNull SwitchCompat switchVibration, @NonNull TextView tvAuthStatus,
+      @NonNull TextView tvKbStatus, @NonNull TextView tvSignedInEmail) {
     this.rootView = rootView;
     this.btnEnableKeyboard = btnEnableKeyboard;
     this.btnGoogle = btnGoogle;
@@ -83,6 +87,7 @@ public final class ActivitySetupBinding implements ViewBinding {
     this.inputByoKey = inputByoKey;
     this.inputEmail = inputEmail;
     this.inputPassword = inputPassword;
+    this.switchVibration = switchVibration;
     this.tvAuthStatus = tvAuthStatus;
     this.tvKbStatus = tvKbStatus;
     this.tvSignedInEmail = tvSignedInEmail;
@@ -181,6 +186,12 @@ public final class ActivitySetupBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.switch_vibration;
+      SwitchCompat switchVibration = ViewBindings.findChildViewById(rootView, id);
+      if (switchVibration == null) {
+        break missingId;
+      }
+
       id = R.id.tv_auth_status;
       TextView tvAuthStatus = ViewBindings.findChildViewById(rootView, id);
       if (tvAuthStatus == null) {
@@ -201,7 +212,7 @@ public final class ActivitySetupBinding implements ViewBinding {
 
       return new ActivitySetupBinding((ScrollView) rootView, btnEnableKeyboard, btnGoogle, btnLogin,
           btnLogout, btnSelectKeyboard, btnSignup, cardSignedIn, cardSignedOut, inputByoKey,
-          inputEmail, inputPassword, tvAuthStatus, tvKbStatus, tvSignedInEmail);
+          inputEmail, inputPassword, switchVibration, tvAuthStatus, tvKbStatus, tvSignedInEmail);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

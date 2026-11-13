@@ -39,6 +39,9 @@ public final class KeyboardViewBinding implements ViewBinding {
   public final TextView btnCancelNote;
 
   @NonNull
+  public final TextView btnClearClip;
+
+  @NonNull
   public final TextView btnMode;
 
   @NonNull
@@ -52,6 +55,42 @@ public final class KeyboardViewBinding implements ViewBinding {
 
   @NonNull
   public final TextView btnUseResponse;
+
+  @NonNull
+  public final RecyclerView clipRecycler;
+
+  @NonNull
+  public final TextView clipStatus;
+
+  @NonNull
+  public final TextView key0;
+
+  @NonNull
+  public final TextView key1;
+
+  @NonNull
+  public final TextView key2;
+
+  @NonNull
+  public final TextView key3;
+
+  @NonNull
+  public final TextView key4;
+
+  @NonNull
+  public final TextView key5;
+
+  @NonNull
+  public final TextView key6;
+
+  @NonNull
+  public final TextView key7;
+
+  @NonNull
+  public final TextView key8;
+
+  @NonNull
+  public final TextView key9;
 
   @NonNull
   public final TextView keyA;
@@ -177,6 +216,9 @@ public final class KeyboardViewBinding implements ViewBinding {
   public final LinearLayout panelAi;
 
   @NonNull
+  public final FrameLayout panelClipboard;
+
+  @NonNull
   public final LinearLayout panelKeyboard;
 
   @NonNull
@@ -297,6 +339,9 @@ public final class KeyboardViewBinding implements ViewBinding {
   public final TextView tabAi;
 
   @NonNull
+  public final TextView tabClipboard;
+
+  @NonNull
   public final LinearLayout tabGroup;
 
   @NonNull
@@ -310,24 +355,29 @@ public final class KeyboardViewBinding implements ViewBinding {
 
   private KeyboardViewBinding(@NonNull LinearLayout rootView, @NonNull EditText aiInput,
       @NonNull LinearLayout aiLoading, @NonNull LinearLayout aiMessagesContainer,
-      @NonNull ScrollView aiScroll, @NonNull TextView btnCancelNote, @NonNull TextView btnMode,
-      @NonNull TextView btnNewNote, @NonNull TextView btnSaveNote, @NonNull TextView btnSendAi,
-      @NonNull TextView btnUseResponse, @NonNull TextView keyA, @NonNull TextView keyB,
-      @NonNull TextView keyC, @NonNull TextView keyComma, @NonNull TextView keyD,
-      @NonNull TextView keyDelete, @NonNull TextView keyE, @NonNull TextView keyF,
-      @NonNull TextView keyG, @NonNull TextView keyH, @NonNull TextView keyI,
-      @NonNull TextView keyJ, @NonNull TextView keyK, @NonNull TextView keyL,
-      @NonNull TextView keyM, @NonNull TextView keyN, @NonNull TextView keyO,
-      @NonNull TextView keyP, @NonNull TextView keyPeriod, @NonNull TextView keyQ,
-      @NonNull TextView keyR, @NonNull TextView keyReturn, @NonNull TextView keyS,
-      @NonNull TextView keyShift, @NonNull TextView keySpace, @NonNull TextView keySymbols,
-      @NonNull TextView keyT, @NonNull TextView keyU, @NonNull TextView keyV,
-      @NonNull TextView keyW, @NonNull TextView keyX, @NonNull TextView keyY,
-      @NonNull TextView keyZ, @NonNull LinearLayout keyboardRoot,
-      @NonNull EditText noteContentInput, @NonNull EditText noteTitleInput,
-      @NonNull LinearLayout notesEditView, @NonNull LinearLayout notesListView,
-      @NonNull RecyclerView notesRecycler, @NonNull TextView notesStatus,
-      @NonNull LinearLayout panelAi, @NonNull LinearLayout panelKeyboard,
+      @NonNull ScrollView aiScroll, @NonNull TextView btnCancelNote, @NonNull TextView btnClearClip,
+      @NonNull TextView btnMode, @NonNull TextView btnNewNote, @NonNull TextView btnSaveNote,
+      @NonNull TextView btnSendAi, @NonNull TextView btnUseResponse,
+      @NonNull RecyclerView clipRecycler, @NonNull TextView clipStatus, @NonNull TextView key0,
+      @NonNull TextView key1, @NonNull TextView key2, @NonNull TextView key3,
+      @NonNull TextView key4, @NonNull TextView key5, @NonNull TextView key6,
+      @NonNull TextView key7, @NonNull TextView key8, @NonNull TextView key9,
+      @NonNull TextView keyA, @NonNull TextView keyB, @NonNull TextView keyC,
+      @NonNull TextView keyComma, @NonNull TextView keyD, @NonNull TextView keyDelete,
+      @NonNull TextView keyE, @NonNull TextView keyF, @NonNull TextView keyG,
+      @NonNull TextView keyH, @NonNull TextView keyI, @NonNull TextView keyJ,
+      @NonNull TextView keyK, @NonNull TextView keyL, @NonNull TextView keyM,
+      @NonNull TextView keyN, @NonNull TextView keyO, @NonNull TextView keyP,
+      @NonNull TextView keyPeriod, @NonNull TextView keyQ, @NonNull TextView keyR,
+      @NonNull TextView keyReturn, @NonNull TextView keyS, @NonNull TextView keyShift,
+      @NonNull TextView keySpace, @NonNull TextView keySymbols, @NonNull TextView keyT,
+      @NonNull TextView keyU, @NonNull TextView keyV, @NonNull TextView keyW,
+      @NonNull TextView keyX, @NonNull TextView keyY, @NonNull TextView keyZ,
+      @NonNull LinearLayout keyboardRoot, @NonNull EditText noteContentInput,
+      @NonNull EditText noteTitleInput, @NonNull LinearLayout notesEditView,
+      @NonNull LinearLayout notesListView, @NonNull RecyclerView notesRecycler,
+      @NonNull TextView notesStatus, @NonNull LinearLayout panelAi,
+      @NonNull FrameLayout panelClipboard, @NonNull LinearLayout panelKeyboard,
       @NonNull FrameLayout panelNotes, @NonNull LinearLayout panelSymbols,
       @NonNull EditText promptInput, @NonNull TextView sym0, @NonNull TextView sym1,
       @NonNull TextView sym2, @NonNull TextView sym3, @NonNull TextView sym4,
@@ -341,19 +391,32 @@ public final class KeyboardViewBinding implements ViewBinding {
       @NonNull TextView symQuest, @NonNull TextView symQuote, @NonNull TextView symReturn,
       @NonNull TextView symRparen, @NonNull TextView symSemi, @NonNull TextView symSlash,
       @NonNull TextView symSpace, @NonNull TextView symStar, @NonNull TextView symUnder,
-      @NonNull TextView tabAi, @NonNull LinearLayout tabGroup, @NonNull TextView tabKeyboard,
-      @NonNull TextView tabNotes, @NonNull LinearLayout toolbar) {
+      @NonNull TextView tabAi, @NonNull TextView tabClipboard, @NonNull LinearLayout tabGroup,
+      @NonNull TextView tabKeyboard, @NonNull TextView tabNotes, @NonNull LinearLayout toolbar) {
     this.rootView = rootView;
     this.aiInput = aiInput;
     this.aiLoading = aiLoading;
     this.aiMessagesContainer = aiMessagesContainer;
     this.aiScroll = aiScroll;
     this.btnCancelNote = btnCancelNote;
+    this.btnClearClip = btnClearClip;
     this.btnMode = btnMode;
     this.btnNewNote = btnNewNote;
     this.btnSaveNote = btnSaveNote;
     this.btnSendAi = btnSendAi;
     this.btnUseResponse = btnUseResponse;
+    this.clipRecycler = clipRecycler;
+    this.clipStatus = clipStatus;
+    this.key0 = key0;
+    this.key1 = key1;
+    this.key2 = key2;
+    this.key3 = key3;
+    this.key4 = key4;
+    this.key5 = key5;
+    this.key6 = key6;
+    this.key7 = key7;
+    this.key8 = key8;
+    this.key9 = key9;
     this.keyA = keyA;
     this.keyB = keyB;
     this.keyC = keyC;
@@ -395,6 +458,7 @@ public final class KeyboardViewBinding implements ViewBinding {
     this.notesRecycler = notesRecycler;
     this.notesStatus = notesStatus;
     this.panelAi = panelAi;
+    this.panelClipboard = panelClipboard;
     this.panelKeyboard = panelKeyboard;
     this.panelNotes = panelNotes;
     this.panelSymbols = panelSymbols;
@@ -435,6 +499,7 @@ public final class KeyboardViewBinding implements ViewBinding {
     this.symStar = symStar;
     this.symUnder = symUnder;
     this.tabAi = tabAi;
+    this.tabClipboard = tabClipboard;
     this.tabGroup = tabGroup;
     this.tabKeyboard = tabKeyboard;
     this.tabNotes = tabNotes;
@@ -498,6 +563,12 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btn_clear_clip;
+      TextView btnClearClip = ViewBindings.findChildViewById(rootView, id);
+      if (btnClearClip == null) {
+        break missingId;
+      }
+
       id = R.id.btn_mode;
       TextView btnMode = ViewBindings.findChildViewById(rootView, id);
       if (btnMode == null) {
@@ -525,6 +596,78 @@ public final class KeyboardViewBinding implements ViewBinding {
       id = R.id.btn_use_response;
       TextView btnUseResponse = ViewBindings.findChildViewById(rootView, id);
       if (btnUseResponse == null) {
+        break missingId;
+      }
+
+      id = R.id.clip_recycler;
+      RecyclerView clipRecycler = ViewBindings.findChildViewById(rootView, id);
+      if (clipRecycler == null) {
+        break missingId;
+      }
+
+      id = R.id.clip_status;
+      TextView clipStatus = ViewBindings.findChildViewById(rootView, id);
+      if (clipStatus == null) {
+        break missingId;
+      }
+
+      id = R.id.key_0;
+      TextView key0 = ViewBindings.findChildViewById(rootView, id);
+      if (key0 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_1;
+      TextView key1 = ViewBindings.findChildViewById(rootView, id);
+      if (key1 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_2;
+      TextView key2 = ViewBindings.findChildViewById(rootView, id);
+      if (key2 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_3;
+      TextView key3 = ViewBindings.findChildViewById(rootView, id);
+      if (key3 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_4;
+      TextView key4 = ViewBindings.findChildViewById(rootView, id);
+      if (key4 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_5;
+      TextView key5 = ViewBindings.findChildViewById(rootView, id);
+      if (key5 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_6;
+      TextView key6 = ViewBindings.findChildViewById(rootView, id);
+      if (key6 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_7;
+      TextView key7 = ViewBindings.findChildViewById(rootView, id);
+      if (key7 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_8;
+      TextView key8 = ViewBindings.findChildViewById(rootView, id);
+      if (key8 == null) {
+        break missingId;
+      }
+
+      id = R.id.key_9;
+      TextView key9 = ViewBindings.findChildViewById(rootView, id);
+      if (key9 == null) {
         break missingId;
       }
 
@@ -770,6 +913,12 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.panel_clipboard;
+      FrameLayout panelClipboard = ViewBindings.findChildViewById(rootView, id);
+      if (panelClipboard == null) {
+        break missingId;
+      }
+
       id = R.id.panel_keyboard;
       LinearLayout panelKeyboard = ViewBindings.findChildViewById(rootView, id);
       if (panelKeyboard == null) {
@@ -1010,6 +1159,12 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tab_clipboard;
+      TextView tabClipboard = ViewBindings.findChildViewById(rootView, id);
+      if (tabClipboard == null) {
+        break missingId;
+      }
+
       id = R.id.tab_group;
       LinearLayout tabGroup = ViewBindings.findChildViewById(rootView, id);
       if (tabGroup == null) {
@@ -1035,16 +1190,18 @@ public final class KeyboardViewBinding implements ViewBinding {
       }
 
       return new KeyboardViewBinding((LinearLayout) rootView, aiInput, aiLoading,
-          aiMessagesContainer, aiScroll, btnCancelNote, btnMode, btnNewNote, btnSaveNote, btnSendAi,
-          btnUseResponse, keyA, keyB, keyC, keyComma, keyD, keyDelete, keyE, keyF, keyG, keyH, keyI,
-          keyJ, keyK, keyL, keyM, keyN, keyO, keyP, keyPeriod, keyQ, keyR, keyReturn, keyS,
-          keyShift, keySpace, keySymbols, keyT, keyU, keyV, keyW, keyX, keyY, keyZ, keyboardRoot,
-          noteContentInput, noteTitleInput, notesEditView, notesListView, notesRecycler,
-          notesStatus, panelAi, panelKeyboard, panelNotes, panelSymbols, promptInput, sym0, sym1,
-          sym2, sym3, sym4, sym5, sym6, sym7, sym8, sym9, symAbc, symAmp, symAt, symColon, symComma,
-          symDel2, symDollar, symDquote, symEq, symExcl, symHash, symLparen, symMinus, symPercent,
-          symPeriod, symPlus, symQuest, symQuote, symReturn, symRparen, symSemi, symSlash, symSpace,
-          symStar, symUnder, tabAi, tabGroup, tabKeyboard, tabNotes, toolbar);
+          aiMessagesContainer, aiScroll, btnCancelNote, btnClearClip, btnMode, btnNewNote,
+          btnSaveNote, btnSendAi, btnUseResponse, clipRecycler, clipStatus, key0, key1, key2, key3,
+          key4, key5, key6, key7, key8, key9, keyA, keyB, keyC, keyComma, keyD, keyDelete, keyE,
+          keyF, keyG, keyH, keyI, keyJ, keyK, keyL, keyM, keyN, keyO, keyP, keyPeriod, keyQ, keyR,
+          keyReturn, keyS, keyShift, keySpace, keySymbols, keyT, keyU, keyV, keyW, keyX, keyY, keyZ,
+          keyboardRoot, noteContentInput, noteTitleInput, notesEditView, notesListView,
+          notesRecycler, notesStatus, panelAi, panelClipboard, panelKeyboard, panelNotes,
+          panelSymbols, promptInput, sym0, sym1, sym2, sym3, sym4, sym5, sym6, sym7, sym8, sym9,
+          symAbc, symAmp, symAt, symColon, symComma, symDel2, symDollar, symDquote, symEq, symExcl,
+          symHash, symLparen, symMinus, symPercent, symPeriod, symPlus, symQuest, symQuote,
+          symReturn, symRparen, symSemi, symSlash, symSpace, symStar, symUnder, tabAi, tabClipboard,
+          tabGroup, tabKeyboard, tabNotes, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

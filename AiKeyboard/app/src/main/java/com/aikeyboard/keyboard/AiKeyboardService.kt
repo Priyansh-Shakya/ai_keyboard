@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.aikeyboard.R
+import com.aikeyboard.clipboard.ClipboardAdapter
 import com.aikeyboard.data.ApiClient
 import com.aikeyboard.data.ChatMessage
 import com.aikeyboard.data.Note
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 
 class AiKeyboardService : InputMethodService() {
 
-    private enum class Tab { KEYBOARD, AI, NOTES }
+    private enum class Tab { KEYBOARD, AI, NOTES, CLIPBOARD }
 
     // ── state ──
     private var isShifted = false
@@ -63,7 +64,20 @@ class AiKeyboardService : InputMethodService() {
     private val repeatHandler = Handler(Looper.getMainLooper())
     private val api by lazy { ApiClient(this) }
     private lateinit var notesAdapter: NotesAdapter
+    private lateinit var clipboardAdapter: ClipboardAdapter
     private val letterViews = mutableListOf<Pair<TextView, String>>()
+
+    private val clipboardManager by lazy { getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
+    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
+        val clip = clipboardManager.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val text = clip.getItemAt(0).text?.toString()
+            if (!text.isNullOrBlank()) {
+                PrefsManager.addClipboardClip(this, text)
+                if (currentTab == Tab.CLIPBOARD) loadClipboard()
+            }
+        }
+    }
 
     // ── views ──
     private lateinit var rootView: View
@@ -71,12 +85,14 @@ class AiKeyboardService : InputMethodService() {
     private lateinit var tabKeyboard: TextView
     private lateinit var tabAi: TextView
     private lateinit var tabNotes: TextView
+    private lateinit var tabClipboard: TextView
     private lateinit var promptInput: EditText
     private lateinit var btnMode: TextView
     private lateinit var panelKeyboard: View
     private lateinit var panelSymbols: View
     private lateinit var panelAi: View
     private lateinit var panelNotes: View
+    private lateinit var panelClipboard: View
     private lateinit var keyReturn: TextView
     private lateinit var symReturn: TextView
     private lateinit var aiScroll: ScrollView
@@ -94,6 +110,9 @@ class AiKeyboardService : InputMethodService() {
     private lateinit var btnNewNote: TextView
     private lateinit var btnSaveNote: TextView
     private lateinit var btnCancelNote: TextView
+    private lateinit var clipRecycler: RecyclerView
+    private lateinit var clipStatus: TextView
+    private lateinit var btnClearClip: TextView
 
     // ── lifecycle ──
 
@@ -106,6 +125,10 @@ class AiKeyboardService : InputMethodService() {
         setupToolbar()
         setupAiPanel()
         setupNotesPanel()
+        setupClipboardPanel()
+        try {
+            clipboardManager.addPrimaryClipChangedListener(clipListener)
+        } catch (e: Exception) {}
         return rootView
     }
 
@@ -117,6 +140,9 @@ class AiKeyboardService : InputMethodService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            clipboardManager.removePrimaryClipChangedListener(clipListener)
+        } catch (e: Exception) {}
         scope.cancel()
     }
 
@@ -124,9 +150,11 @@ class AiKeyboardService : InputMethodService() {
         fun <T : View> id(i: Int): T = rootView.findViewById(i)
         tabGroup = id(R.id.tab_group)
         tabKeyboard = id(R.id.tab_keyboard); tabAi = id(R.id.tab_ai); tabNotes = id(R.id.tab_notes)
+        tabClipboard = id(R.id.tab_clipboard)
         promptInput = id(R.id.prompt_input); btnMode = id(R.id.btn_mode)
         panelKeyboard = id(R.id.panel_keyboard); panelSymbols = id(R.id.panel_symbols)
         panelAi = id(R.id.panel_ai); panelNotes = id(R.id.panel_notes)
+        panelClipboard = id(R.id.panel_clipboard)
         keyReturn = id(R.id.key_return); symReturn = id(R.id.sym_return)
         aiScroll = id(R.id.ai_scroll); aiMessages = id(R.id.ai_messages_container)
         aiInput = id(R.id.ai_input); btnSendAi = id(R.id.btn_send_ai)
@@ -136,6 +164,9 @@ class AiKeyboardService : InputMethodService() {
         noteTitleInput = id(R.id.note_title_input); noteContentInput = id(R.id.note_content_input)
         btnNewNote = id(R.id.btn_new_note); btnSaveNote = id(R.id.btn_save_note)
         btnCancelNote = id(R.id.btn_cancel_note)
+        clipRecycler = id(R.id.clip_recycler)
+        clipStatus = id(R.id.clip_status)
+        btnClearClip = id(R.id.btn_clear_clip)
     }
 
     // ── toolbar, tabs & layout ──
@@ -144,6 +175,7 @@ class AiKeyboardService : InputMethodService() {
         tabKeyboard.setOnClickListener { showTab(Tab.KEYBOARD) }
         tabAi.setOnClickListener { showTab(Tab.AI) }
         tabNotes.setOnClickListener { showTab(Tab.NOTES); showNotesList(); loadNotes() }
+        tabClipboard.setOnClickListener { showTab(Tab.CLIPBOARD); loadClipboard() }
         btnMode.setOnClickListener { setAiMode(!aiMode) }
         makeLocalInput(promptInput)
     }
@@ -181,7 +213,7 @@ class AiKeyboardService : InputMethodService() {
         val off = ContextCompat.getDrawable(this, R.drawable.bg_tab_unselected)
         val onColor = ContextCompat.getColor(this, R.color.white)
         val offColor = ContextCompat.getColor(this, R.color.text_secondary)
-        listOf(tabKeyboard to Tab.KEYBOARD, tabAi to Tab.AI, tabNotes to Tab.NOTES).forEach { (v, t) ->
+        listOf(tabKeyboard to Tab.KEYBOARD, tabAi to Tab.AI, tabNotes to Tab.NOTES, tabClipboard to Tab.CLIPBOARD).forEach { (v, t) ->
             v.background = if (t == tab) on else off
             v.setTextColor(if (t == tab) onColor else offColor)
         }
@@ -204,9 +236,11 @@ class AiKeyboardService : InputMethodService() {
         panelSymbols.visibility = if (showKeys && isSymbolMode) View.VISIBLE else View.GONE
         panelAi.visibility = if (currentTab == Tab.AI) View.VISIBLE else View.GONE
         panelNotes.visibility = if (currentTab == Tab.NOTES) View.VISIBLE else View.GONE
+        panelClipboard.visibility = if (currentTab == Tab.CLIPBOARD) View.VISIBLE else View.GONE
         // Panels shrink while the keys sit below them, and grow back to read replies.
         setHeightDp(panelAi, if (typingLocally) 110 else 260)
         setHeightDp(panelNotes, if (typingLocally) 130 else 260)
+        setHeightDp(panelClipboard, if (typingLocally) 130 else 260)
 
         val glyph = if (localTarget === promptInput || localTarget === aiInput) "✦" else "↵"
         keyReturn.text = glyph
@@ -263,26 +297,95 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
-    /** Press = act once; hold = repeat. */
+    private fun deleteWord() {
+        val et = localTarget
+        if (et != null) {
+            val text = et.text
+            val s = et.selectionStart
+            val e = et.selectionEnd
+            if (s != e) {
+                text.delete(minOf(s, e), maxOf(s, e))
+                return
+            }
+            if (s <= 0) return
+            var i = s
+            while (i > 0 && text[i - 1].isWhitespace()) {
+                i--
+            }
+            while (i > 0 && !text[i - 1].isWhitespace()) {
+                i--
+            }
+            text.delete(i, s)
+        } else {
+            val ic = currentInputConnection
+            if (ic != null) {
+                val before = ic.getTextBeforeCursor(100, 0)?.toString() ?: ""
+                if (before.isEmpty()) {
+                    sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+                    return
+                }
+                var len = before.length
+                while (len > 0 && before[len - 1].isWhitespace()) {
+                    len--
+                }
+                while (len > 0 && !before[len - 1].isWhitespace()) {
+                    len--
+                }
+                val charsToDelete = before.length - len
+                if (charsToDelete > 0) {
+                    ic.deleteSurroundingText(charsToDelete, 0)
+                } else {
+                    ic.deleteSurroundingText(1, 0)
+                }
+            } else {
+                sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+            }
+        }
+    }
+
+    /** Press = delete char; keep pressed and drag left = delete word by word (like Gboard). */
     @SuppressLint("ClickableViewAccessibility")
-    private fun makeRepeatable(key: View, action: (first: Boolean) -> Unit) {
+    private fun makeSwipeableDelete(key: View) {
+        var startX = 0f
+        var isWordDelete = false
         var repeater: Runnable? = null
+
         key.setOnTouchListener { v, ev ->
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
-                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                    action(true)
+                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
+                    startX = ev.rawX
+                    isWordDelete = false
+                    backspace(true)
+
                     val r = object : Runnable {
-                        override fun run() { action(false); repeatHandler.postDelayed(this, 45) }
+                        override fun run() {
+                            if (isWordDelete) {
+                                deleteWord()
+                                repeatHandler.postDelayed(this, 120)
+                            } else {
+                                backspace(false)
+                                repeatHandler.postDelayed(this, 45)
+                            }
+                        }
                     }
                     repeater = r
                     repeatHandler.postDelayed(r, 380)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaX = ev.rawX - startX
+                    if (!isWordDelete && deltaX < -80f) {
+                        isWordDelete = true
+                        haptic(v, HapticFeedbackConstants.LONG_PRESS)
+                        deleteWord()
+                    }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     v.isPressed = false
                     repeater?.let { repeatHandler.removeCallbacks(it) }
                     repeater = null
+                    isWordDelete = false
                 }
             }
             true
@@ -312,7 +415,17 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
-    // ── keys ──
+    /** Long-press on the Return/send key = a real newline while the key is acting as "send to AI". */
+    private fun holdEnter(): Boolean {
+        if (localTarget === promptInput || localTarget === aiInput) { commit("\n"); return true }
+        return false
+    }
+
+    private fun haptic(v: View, feedbackConstant: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
+        if (PrefsManager.isVibrationEnabled(this)) {
+            v.performHapticFeedback(feedbackConstant)
+        }
+    }
 
     /** Fires on finger-DOWN (like real keyboards): no lost taps from release-slop, lower latency. */
     @SuppressLint("ClickableViewAccessibility")
@@ -321,7 +434,7 @@ class AiKeyboardService : InputMethodService() {
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
-                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
                     action()
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.isPressed = false
@@ -340,10 +453,10 @@ class AiKeyboardService : InputMethodService() {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
                     held = false
-                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
                     val r = Runnable {
                         held = onHold()
-                        if (held) v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        if (held) haptic(v, HapticFeedbackConstants.LONG_PRESS)
                     }
                     holder = r
                     repeatHandler.postDelayed(r, 400)
@@ -364,28 +477,34 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
-    /** Long-press on the Return/send key = a real newline while the key is acting as "send to AI". */
-    private fun holdEnter(): Boolean {
-        if (localTarget === promptInput || localTarget === aiInput) { commit("\n"); return true }
-        return false
-    }
-
     private fun setupKeyboard() {
+        "1234567890".forEach { c ->
+            val v = rootView.findViewById<TextView>(resources.getIdentifier("key_$c", "id", packageName))
+            if (v != null) {
+                onKeyDown(v) { commit(c.toString()) }
+            }
+        }
         "qwertyuiopasdfghjklzxcvbnm".forEach { c ->
             val v = rootView.findViewById<TextView>(resources.getIdentifier("key_$c", "id", packageName))
-            letterViews.add(v to c.toString())
-            onKeyDown(v) {
-                commit(if (isShifted) c.toString().uppercase() else c.toString())
-                if (isShifted) { isShifted = false; updateShift() }
+            if (v != null) {
+                letterViews.add(v to c.toString())
+                onKeyDown(v) {
+                    commit(if (isShifted) c.toString().uppercase() else c.toString())
+                    if (isShifted) { isShifted = false; updateShift() }
+                }
             }
         }
         listOf(R.id.key_comma to ",", R.id.key_period to ".", R.id.key_space to " ").forEach { (id, s) ->
-            onKeyDown(rootView.findViewById(id)) { commit(s) }
+            val v = rootView.findViewById<TextView>(id)
+            if (v != null) onKeyDown(v) { commit(s) }
         }
-        makeRepeatable(rootView.findViewById(R.id.key_delete)) { first -> backspace(first) }
-        onTapOrHold(keyReturn, onTap = { enterKey() }, onHold = { holdEnter() })
-        onKeyDown(rootView.findViewById(R.id.key_shift)) { isShifted = !isShifted; updateShift() }
-        rootView.findViewById<TextView>(R.id.key_symbols).setOnClickListener { isSymbolMode = true; refreshLayout() }
+        val delKey = rootView.findViewById<View>(R.id.key_delete)
+        if (delKey != null) makeSwipeableDelete(delKey)
+        if (keyReturn != null) onTapOrHold(keyReturn, onTap = { enterKey() }, onHold = { holdEnter() })
+        val shiftKey = rootView.findViewById<View>(R.id.key_shift)
+        if (shiftKey != null) onKeyDown(shiftKey) { isShifted = !isShifted; updateShift() }
+        val symKey = rootView.findViewById<TextView>(R.id.key_symbols)
+        symKey?.setOnClickListener { isSymbolMode = true; refreshLayout() }
 
         // Symbol panel: every single-character key types its own label.
         val special = setOf(R.id.sym_del2, R.id.sym_abc, R.id.sym_space, R.id.sym_return)
@@ -394,10 +513,13 @@ class AiKeyboardService : InputMethodService() {
                 onKeyDown(v) { commit(v.text.toString()) }
             }
         }
-        onKeyDown(rootView.findViewById(R.id.sym_space)) { commit(" ") }
-        makeRepeatable(rootView.findViewById(R.id.sym_del2)) { first -> backspace(first) }
-        onTapOrHold(symReturn, onTap = { enterKey() }, onHold = { holdEnter() })
-        rootView.findViewById<TextView>(R.id.sym_abc).setOnClickListener { isSymbolMode = false; refreshLayout() }
+        val symSpace = rootView.findViewById<View>(R.id.sym_space)
+        if (symSpace != null) onKeyDown(symSpace) { commit(" ") }
+        val symDel = rootView.findViewById<View>(R.id.sym_del2)
+        if (symDel != null) makeSwipeableDelete(symDel)
+        if (symReturn != null) onTapOrHold(symReturn, onTap = { enterKey() }, onHold = { holdEnter() })
+        val symAbc = rootView.findViewById<TextView>(R.id.sym_abc)
+        symAbc?.setOnClickListener { isSymbolMode = false; refreshLayout() }
     }
 
     private fun forEachLeaf(v: View, fn: (View) -> Unit) {
@@ -609,5 +731,32 @@ class AiKeyboardService : InputMethodService() {
         notesListView.visibility = View.VISIBLE
         noteTitleInput.setText(""); noteContentInput.setText("")
         deactivateLocal()
+    }
+
+    // ── clipboard panel ──
+
+    private fun setupClipboardPanel() {
+        clipboardAdapter = ClipboardAdapter(
+            onPaste = { text ->
+                commit(text)
+                showTab(Tab.KEYBOARD)
+            },
+            onDelete = { text ->
+                PrefsManager.removeClipboardClip(this, text)
+                loadClipboard()
+            }
+        )
+        clipRecycler.adapter = clipboardAdapter
+        clipRecycler.layoutManager = LinearLayoutManager(this)
+        btnClearClip.setOnClickListener {
+            PrefsManager.clearClipboardHistory(this)
+            loadClipboard()
+        }
+    }
+
+    private fun loadClipboard() {
+        val history = PrefsManager.getClipboardHistory(this)
+        clipboardAdapter.updateItems(history)
+        clipStatus.visibility = if (history.isEmpty()) View.VISIBLE else View.GONE
     }
 }

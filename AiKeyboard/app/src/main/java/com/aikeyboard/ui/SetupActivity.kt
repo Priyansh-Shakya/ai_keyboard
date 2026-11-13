@@ -71,6 +71,13 @@ class SetupActivity : AppCompatActivity() {
             // Android doesn't let apps switch the default keyboard silently; this opens the system picker.
             (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
         }
+
+        val switchVibration = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switch_vibration)
+        switchVibration.isChecked = PrefsManager.isVibrationEnabled(this)
+        switchVibration.setOnCheckedChangeListener { _, isChecked ->
+            PrefsManager.setVibrationEnabled(this, isChecked)
+        }
+
         refreshUi()
     }
 
