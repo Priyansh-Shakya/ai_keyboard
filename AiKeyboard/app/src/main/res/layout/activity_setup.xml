@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_setup" android:fillViewport="true">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:paddingStart="24dp" android:paddingEnd="24dp"
+        android:paddingTop="56dp" android:paddingBottom="40dp">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:gravity="center" android:layout_marginBottom="32dp">
+            <TextView android:layout_width="64dp" android:layout_height="64dp" android:text="✦" android:textSize="32sp"
+                android:textColor="@color/brand_accent" android:gravity="center" android:background="@drawable/bg_key_special" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AI Keyboard"
+                android:textColor="@color/text_primary" android:textSize="28sp" android:textStyle="bold" android:layout_marginTop="12dp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Your intelligent typing companion" android:textColor="@color/text_secondary"
+                android:textSize="13sp" android:layout_marginTop="6dp" />
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="ACCOUNT" android:textColor="@color/brand_accent" android:textSize="10sp"
+            android:letterSpacing="0.15" android:layout_marginBottom="12dp" />
+
+        <!-- signed out -->
+        <LinearLayout android:id="@+id/card_signed_out" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_settings_field" android:padding="16dp" android:layout_marginBottom="24dp">
+
+            <EditText android:id="@+id/input_email" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/bg_input_field" android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+                android:hint="Email" android:inputType="textEmailAddress" android:maxLines="1" />
+
+            <EditText android:id="@+id/input_password" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/bg_input_field" android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+                android:hint="Password (min 6 characters)" android:inputType="textPassword" android:maxLines="1" android:layout_marginTop="10dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginTop="14dp">
+                <Button android:id="@+id/btn_login" android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+                    android:text="Log in" android:textColor="@color/white" android:backgroundTint="@color/brand_accent" />
+                <Button android:id="@+id/btn_signup" android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+                    android:layout_marginStart="8dp" android:text="Sign up" android:textColor="@color/brand_accent"
+                    android:backgroundTint="@color/brand_card" />
+            </LinearLayout>
+            <Button android:id="@+id/btn_google" android:layout_width="match_parent" android:layout_height="46dp"
+                android:layout_marginTop="8dp" android:text="Continue with Google" android:textColor="@color/text_primary"
+                android:backgroundTint="@color/key_special" />
+            <TextView android:id="@+id/tv_auth_status" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" android:textSize="12sp" android:lineSpacingMultiplier="1.3" />
+        </LinearLayout>
+
+        <!-- signed in -->
+        <LinearLayout android:id="@+id/card_signed_in" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:visibility="gone" android:orientation="vertical" android:background="@drawable/bg_settings_field" android:padding="16dp" android:layout_marginBottom="24dp">
+            <TextView android:id="@+id/tv_signed_in_email" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/brand_green" android:textSize="14sp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+                android:text="Signed in. AI chat and notes are ready in the keyboard." android:textColor="@color/text_secondary" android:textSize="12sp" />
+            <Button android:id="@+id/btn_logout" android:layout_width="match_parent" android:layout_height="44dp"
+                android:layout_marginTop="12dp" android:text="Sign out" android:textColor="@color/brand_red"
+                android:backgroundTint="@color/brand_card" />
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="KEYBOARD" android:textColor="@color/brand_accent" android:textSize="10sp"
+            android:letterSpacing="0.15" android:layout_marginBottom="12dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_settings_field" android:padding="16dp" android:layout_marginBottom="24dp">
+            <TextView android:id="@+id/tv_kb_status" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textColor="@color/text_primary" android:textSize="13sp" />
+            <Button android:id="@+id/btn_enable_keyboard" android:layout_width="match_parent" android:layout_height="44dp"
+                android:layout_marginTop="12dp" android:text="1. Enable keyboard" android:textColor="@color/white"
+                android:backgroundTint="@color/brand_accent" />
+            <Button android:id="@+id/btn_select_keyboard" android:layout_width="match_parent" android:layout_height="44dp"
+                android:layout_marginTop="8dp" android:text="2. Choose as default" android:textColor="@color/brand_accent"
+                android:backgroundTint="@color/brand_card" />
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="BRING YOUR OWN API (COMING SOON)" android:textColor="@color/brand_accent" android:textSize="10sp"
+            android:letterSpacing="0.15" android:layout_marginBottom="12dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:alpha="0.5" android:orientation="vertical" android:background="@drawable/bg_settings_field" android:padding="16dp" android:layout_marginBottom="24dp">
+
+            <EditText android:id="@+id/input_byo_key" android:layout_width="match_parent" android:layout_height="48dp"
+                android:background="@drawable/bg_input_field" android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+                android:hint="Your own API key" android:inputType="textPassword" android:maxLines="1" android:enabled="false" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp"
+                android:text="Later you'll be able to use your own provider key instead of ours."
+                android:textColor="@color/text_hint" android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

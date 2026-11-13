@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="key_height">54dp</dimen>
+    <dimen name="key_corner_radius">7dp</dimen>
+    <dimen name="panel_corner_radius">12dp</dimen>
+    <dimen name="keyboard_padding">4dp</dimen>
+</resources>

@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-mergeDebugResources-38:/layout/keyboard_view.xml",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/keyboard_view.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-mergeDebugResources-38:/layout/activity_setup.xml",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/activity_setup.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-mergeDebugResources-38:/layout/item_ai_bubble.xml",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/item_ai_bubble.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-mergeDebugResources-38:/layout/item_note.xml",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/item_note.xml"
+    },
+    {
+        "merged": "com.aikeyboard.app-mergeDebugResources-38:/layout/keyboard_view.xml",
+        "source": "com.aikeyboard.app-main-41:/layout/keyboard_view.xml"
+    }
+]

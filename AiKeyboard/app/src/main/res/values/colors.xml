@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="brand_primary">#0A0A0F</color>
+    <color name="brand_surface">#12121A</color>
+    <color name="brand_card">#1C1C28</color>
+    <color name="brand_accent">#6C63FF</color>
+    <color name="brand_accent_dim">#3D3880</color>
+    <color name="brand_green">#00E5A0</color>
+    <color name="brand_red">#FF4F6E</color>
+
+    <!-- Text -->
+    <color name="text_primary">#F0F0FF</color>
+    <color name="text_secondary">#8888AA</color>
+    <color name="text_hint">#44445A</color>
+
+    <!-- Keyboard keys -->
+    <color name="key_normal">#1E1E2E</color>
+    <color name="key_special">#252535</color>
+    <color name="key_pressed">#6C63FF</color>
+    <color name="key_text">#E0E0F5</color>
+    <color name="key_border">#2A2A3E</color>
+
+    <!-- Panel -->
+    <color name="panel_bg">#0D0D18</color>
+    <color name="panel_input_bg">#1A1A28</color>
+    <color name="ai_bubble">#1E1830</color>
+    <color name="user_bubble">#1A2E1A</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
+</resources>

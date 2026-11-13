@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Keyboard</string>
+    <string name="keyboard_name">AI Keyboard</string>
+    <string name="subtype_en_us">English (US)</string>
+    <string name="setup_title">AI Keyboard Setup</string>
+    <string name="setup_subtitle">Configure your intelligent keyboard</string>
+    <string name="anthropic_key_hint">Anthropic API Key (sk-ant-...)</string>
+    <string name="supabase_url_hint">Supabase Project URL</string>
+    <string name="supabase_key_hint">Supabase Anon Key</string>
+    <string name="save_settings">Save Settings</string>
+    <string name="enable_keyboard">Enable Keyboard</string>
+    <string name="select_keyboard">Set as Default</string>
+    <string name="settings_saved">Settings saved!</string>
+    <string name="type_message">Type a message…</string>
+    <string name="note_title_hint">Note title…</string>
+    <string name="note_content_hint">Note content…</string>
+</resources>

@@ -1,0 +1,106 @@
+[
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_note_card.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_note_card.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_bubble_user.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_bubble_user.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_fab.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_fab.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.aikeyboard.app-merged_res-39:/drawable_bg_cell_special.xml.flat",
+        "source": "com.aikeyboard.app-main-41:/drawable/bg_cell_special.xml"
+    },
+    {
+        "merged": "com.aikeyboard.app-merged_res-39:/layout_keyboard_view.xml.flat",
+        "source": "com.aikeyboard.app-main-41:/layout/keyboard_view.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_bubble_ai.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_bubble_ai.xml"
+    },
+    {
+        "merged": "com.aikeyboard.app-merged_res-39:/drawable_bg_cell_normal.xml.flat",
+        "source": "com.aikeyboard.app-main-41:/drawable/bg_cell_normal.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_tab_unselected.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_tab_unselected.xml"
+    },
+    {
+        "merged": "com.aikeyboard.app-merged_res-39:/drawable_bg_cell_accent.xml.flat",
+        "source": "com.aikeyboard.app-main-41:/drawable/bg_cell_accent.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_key_special.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_key_special.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/xml_method.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/xml/method.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/layout_item_note.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/item_note.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_setup.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_setup.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_tab_selected.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_tab_selected.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/layout_item_ai_bubble.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/item_ai_bubble.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/layout_keyboard_view.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/keyboard_view.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/layout_activity_setup.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/activity_setup.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_input_field.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_input_field.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/xml_network_security_config.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_panel.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_panel.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_settings_field.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_settings_field.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_key_normal.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_key_normal.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_key_accent.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_key_accent.xml"
+    }
+]

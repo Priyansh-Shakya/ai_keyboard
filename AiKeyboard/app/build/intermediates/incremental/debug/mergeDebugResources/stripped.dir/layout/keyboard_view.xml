@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboard_root"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:background="@color/brand_primary">
+
+    <!-- ── Slim toolbar ABOVE the keys (never shrinks the keys) ── -->
+    <LinearLayout android:id="@+id/toolbar"
+        android:layout_width="match_parent" android:layout_height="40dp"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:background="@color/brand_surface" android:paddingStart="6dp" android:paddingEnd="6dp">
+
+        <LinearLayout android:id="@+id/tab_group"
+            android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/tab_keyboard" android:layout_width="wrap_content" android:layout_height="30dp" android:layout_marginEnd="4dp" android:paddingStart="12dp" android:paddingEnd="12dp" android:text="⌨" android:textSize="12sp" android:textColor="@color/white" android:gravity="center" android:background="@drawable/bg_tab_selected" />
+            <TextView android:id="@+id/tab_ai" android:layout_width="wrap_content" android:layout_height="30dp" android:layout_marginEnd="4dp" android:paddingStart="12dp" android:paddingEnd="12dp" android:text="✦ AI" android:textSize="12sp" android:textColor="@color/text_secondary" android:gravity="center" android:background="@drawable/bg_tab_unselected" />
+            <TextView android:id="@+id/tab_notes" android:layout_width="wrap_content" android:layout_height="30dp" android:layout_marginEnd="4dp" android:paddingStart="12dp" android:paddingEnd="12dp" android:text="📋 Notes" android:textSize="12sp" android:textColor="@color/text_secondary" android:gravity="center" android:background="@drawable/bg_tab_unselected" />
+        </LinearLayout>
+
+        <!-- Shown instead of the tabs while the destination is the AI -->
+        <EditText android:id="@+id/prompt_input"
+            android:layout_width="0dp" android:layout_height="32dp" android:layout_weight="1"
+            android:visibility="gone" android:background="@drawable/bg_input_field"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+            android:hint="✦ Ask the AI…" android:inputType="text" android:maxLines="1" />
+
+        <!-- ONE button: ↑ = typing goes to the app, ↓ = typing goes to the AI -->
+        <TextView android:id="@+id/btn_mode"
+            android:layout_width="46dp" android:layout_height="30dp" android:layout_marginStart="6dp"
+            android:text="↑" android:textSize="18sp" android:textColor="@color/white" android:gravity="center"
+            android:background="@drawable/bg_key_special" />
+    </LinearLayout>
+
+    <!-- ── PANEL: AI CHAT ── -->
+    <LinearLayout android:id="@+id/panel_ai"
+        android:layout_width="match_parent" android:layout_height="260dp"
+        android:orientation="vertical" android:visibility="gone" android:background="@color/panel_bg">
+
+        <ScrollView android:id="@+id/ai_scroll"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:padding="8dp" android:clipToPadding="false">
+            <LinearLayout android:id="@+id/ai_messages_container"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+        </ScrollView>
+
+        <LinearLayout android:id="@+id/ai_loading"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:paddingStart="12dp" android:paddingBottom="4dp" android:visibility="gone">
+            <ProgressBar android:layout_width="16dp" android:layout_height="16dp" android:indeterminateTint="@color/brand_accent" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="  AI is thinking…" android:textSize="11sp" android:textColor="@color/brand_accent"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="44dp"
+            android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="8dp"
+            android:paddingBottom="6dp" android:gravity="center_vertical">
+            <EditText android:id="@+id/ai_input"
+                android:layout_width="0dp" android:layout_height="34dp" android:layout_weight="1"
+                android:background="@drawable/bg_input_field" android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+                android:hint="Ask AI anything…" android:inputType="text" android:imeOptions="actionSend" android:maxLines="1" />
+            <TextView android:id="@+id/btn_send_ai"
+                android:layout_width="34dp" android:layout_height="34dp" android:layout_marginStart="6dp"
+                android:text="↑" android:textSize="16sp" android:textColor="@color/white" android:gravity="center"
+                android:background="@drawable/bg_key_accent" />
+            <TextView android:id="@+id/btn_use_response"
+                android:layout_width="34dp" android:layout_height="34dp" android:layout_marginStart="4dp"
+                android:text="↗" android:textSize="16sp" android:textColor="@color/text_primary" android:gravity="center"
+                android:background="@drawable/bg_key_special" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ── PANEL: NOTES ── -->
+    <FrameLayout android:id="@+id/panel_notes"
+        android:layout_width="match_parent" android:layout_height="260dp"
+        android:visibility="gone" android:background="@color/panel_bg">
+
+        <LinearLayout android:id="@+id/notes_list_view"
+            android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="38dp"
+                android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="8dp" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="Saved Notes" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                <TextView android:id="@+id/btn_new_note"
+                    android:layout_width="wrap_content" android:layout_height="28dp"
+                    android:text="+ New" android:textColor="@color/brand_accent" android:textSize="11sp"
+                    android:paddingStart="12dp" android:paddingEnd="12dp" android:gravity="center"
+                    android:background="@drawable/bg_key_special" />
+            </LinearLayout>
+            <TextView android:id="@+id/notes_status"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp"
+                android:textColor="@color/text_secondary" android:textSize="12sp" android:visibility="gone" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/notes_recycler"
+                android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+                android:paddingStart="8dp" android:paddingEnd="8dp" android:clipToPadding="false" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/notes_edit_view"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:orientation="vertical" android:padding="8dp" android:visibility="gone" android:background="@color/panel_bg">
+            <EditText android:id="@+id/note_title_input"
+                android:layout_width="match_parent" android:layout_height="36dp"
+                android:background="@drawable/bg_input_field" android:paddingStart="12dp" android:paddingEnd="12dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="13sp"
+                android:hint="Note title…" android:inputType="text" android:maxLines="1" />
+            <EditText android:id="@+id/note_content_input"
+                android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+                android:layout_marginTop="6dp" android:background="@drawable/bg_input_field"
+                android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="8dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_hint" android:textSize="12sp"
+                android:hint="Note content…" android:inputType="textMultiLine" android:gravity="top" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="36dp"
+                android:orientation="horizontal" android:layout_marginTop="6dp" android:gravity="end">
+                <TextView android:id="@+id/btn_cancel_note"
+                    android:layout_width="wrap_content" android:layout_height="match_parent"
+                    android:text="Cancel" android:textColor="@color/text_secondary" android:textSize="12sp"
+                    android:paddingStart="14dp" android:paddingEnd="14dp" android:gravity="center"
+                    android:background="@drawable/bg_key_special" />
+                <TextView android:id="@+id/btn_save_note"
+                    android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginStart="8dp"
+                    android:text="Save Note" android:textColor="@color/white" android:textSize="12sp"
+                    android:paddingStart="14dp" android:paddingEnd="14dp" android:gravity="center"
+                    android:background="@drawable/bg_key_accent" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ── KEYS ── -->
+    <LinearLayout android:id="@+id/panel_keyboard"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:background="@color/brand_primary"
+        android:paddingStart="0dp" android:paddingEnd="0dp" android:paddingTop="0dp" android:paddingBottom="4dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/key_q" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="q" />
+            <TextView android:id="@+id/key_w" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="w" />
+            <TextView android:id="@+id/key_e" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="e" />
+            <TextView android:id="@+id/key_r" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="r" />
+            <TextView android:id="@+id/key_t" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="t" />
+            <TextView android:id="@+id/key_y" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="y" />
+            <TextView android:id="@+id/key_u" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="u" />
+            <TextView android:id="@+id/key_i" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="i" />
+            <TextView android:id="@+id/key_o" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="o" />
+            <TextView android:id="@+id/key_p" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="p" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="0.5" />
+            <TextView android:id="@+id/key_a" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="a" />
+            <TextView android:id="@+id/key_s" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="s" />
+            <TextView android:id="@+id/key_d" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="d" />
+            <TextView android:id="@+id/key_f" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="f" />
+            <TextView android:id="@+id/key_g" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="g" />
+            <TextView android:id="@+id/key_h" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="h" />
+            <TextView android:id="@+id/key_j" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="j" />
+            <TextView android:id="@+id/key_k" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="k" />
+            <TextView android:id="@+id/key_l" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="l" />
+            <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="0.5" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/key_shift" style="@style/KeyButton.Special" android:background="@drawable/bg_cell_special" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="20sp" android:text="⇧" />
+            <TextView android:id="@+id/key_z" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="z" />
+            <TextView android:id="@+id/key_x" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="x" />
+            <TextView android:id="@+id/key_c" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="c" />
+            <TextView android:id="@+id/key_v" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="v" />
+            <TextView android:id="@+id/key_b" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="b" />
+            <TextView android:id="@+id/key_n" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="n" />
+            <TextView android:id="@+id/key_m" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="m" />
+            <TextView android:id="@+id/key_delete" style="@style/KeyButton.Special" android:background="@drawable/bg_cell_special" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="20sp" android:text="⌫" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/key_symbols" style="@style/KeyButton.Special" android:background="@drawable/bg_cell_special" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="14sp" android:text="123" />
+            <TextView android:id="@+id/key_comma" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.9" android:textSize="20sp" android:text="," />
+            <TextView android:id="@+id/key_space" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="5" android:textSize="11sp" android:text="SPACE" android:textColor="@color/text_secondary" />
+            <TextView android:id="@+id/key_period" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.9" android:textSize="20sp" android:text="." />
+            <TextView android:id="@+id/key_return" style="@style/KeyButton.Accent" android:background="@drawable/bg_cell_accent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="20sp" android:text="↵" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/panel_symbols"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:background="@color/brand_primary" android:visibility="gone"
+        android:paddingStart="0dp" android:paddingEnd="0dp" android:paddingTop="0dp" android:paddingBottom="4dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/sym_1" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="1" />
+            <TextView android:id="@+id/sym_2" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="2" />
+            <TextView android:id="@+id/sym_3" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="3" />
+            <TextView android:id="@+id/sym_4" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="4" />
+            <TextView android:id="@+id/sym_5" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="5" />
+            <TextView android:id="@+id/sym_6" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="6" />
+            <TextView android:id="@+id/sym_7" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="7" />
+            <TextView android:id="@+id/sym_8" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="8" />
+            <TextView android:id="@+id/sym_9" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="9" />
+            <TextView android:id="@+id/sym_0" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="0" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/sym_at" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="\@" />
+            <TextView android:id="@+id/sym_hash" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="#" />
+            <TextView android:id="@+id/sym_dollar" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="$" />
+            <TextView android:id="@+id/sym_percent" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="%" />
+            <TextView android:id="@+id/sym_amp" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="&amp;" />
+            <TextView android:id="@+id/sym_minus" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="-" />
+            <TextView android:id="@+id/sym_plus" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="+" />
+            <TextView android:id="@+id/sym_lparen" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="(" />
+            <TextView android:id="@+id/sym_rparen" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text=")" />
+            <TextView android:id="@+id/sym_slash" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="/" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/sym_excl" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="!" />
+            <TextView android:id="@+id/sym_quest" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="\?" />
+            <TextView android:id="@+id/sym_under" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="_" />
+            <TextView android:id="@+id/sym_eq" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="=" />
+            <TextView android:id="@+id/sym_star" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="*" />
+            <TextView android:id="@+id/sym_colon" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text=":" />
+            <TextView android:id="@+id/sym_semi" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text=";" />
+            <TextView android:id="@+id/sym_quote" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="'" />
+            <TextView android:id="@+id/sym_dquote" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="&quot;" />
+            <TextView android:id="@+id/sym_del2" style="@style/KeyButton.Special" android:background="@drawable/bg_cell_special" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.0" android:textSize="20sp" android:text="⌫" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/key_height" android:orientation="horizontal">
+            <TextView android:id="@+id/sym_abc" style="@style/KeyButton.Special" android:background="@drawable/bg_cell_special" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="14sp" android:text="ABC" />
+            <TextView android:id="@+id/sym_comma" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.9" android:textSize="20sp" android:text="," />
+            <TextView android:id="@+id/sym_space" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="5" android:textSize="11sp" android:text="SPACE" android:textColor="@color/text_secondary" />
+            <TextView android:id="@+id/sym_period" style="@style/KeyButton" android:background="@drawable/bg_cell_normal" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.9" android:textSize="20sp" android:text="." />
+            <TextView android:id="@+id/sym_return" style="@style/KeyButton.Accent" android:background="@drawable/bg_cell_accent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" android:textSize="20sp" android:text="↵" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
