@@ -1,1 +1,29 @@
 backend/.env
+# Secrets and environment files
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Node dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# IDE files
+.idea/
+.vscode/
