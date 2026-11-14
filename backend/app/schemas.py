@@ -9,6 +9,7 @@ class Credentials(BaseModel):
 
 
 class SignupBody(Credentials):
+    name: str | None = Field(None, max_length=100)
     password: str = Field(min_length=6, max_length=128)
 
 

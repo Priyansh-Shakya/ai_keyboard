@@ -41,7 +41,20 @@ def _session(d: dict) -> dict:
 
 @app.post("/auth/signup")
 async def signup(body: SignupBody):
-    d = await supa.auth_call("signup", {"email": body.email, "password": body.password})
+    signup_payload: dict = {"email": body.email, "password": body.password}
+    if body.name:
+        signup_payload["options"] = {"data": {"name": body.name}}
+    d = await supa.auth_call("signup", signup_payload)
+
+    user_data = d.get("user") or (d if "id" in d else {})
+    user_id = user_data.get("id")
+    email = user_data.get("email") or body.email
+    user_meta = user_data.get("user_metadata") or {}
+    name = body.name or user_meta.get("name") or user_meta.get("full_name")
+
+    if user_id:
+        await supa.ensure_user_profile(user_id, email, name)
+
     if "access_token" in d:
         return _session(d)
     return {"confirmation_required": True,
@@ -52,6 +65,13 @@ async def signup(body: SignupBody):
 async def login(body: Credentials):
     d = await supa.auth_call("token", {"email": body.email, "password": body.password},
                              params={"grant_type": "password"})
+    user_data = d.get("user") or {}
+    user_id = user_data.get("id")
+    email = user_data.get("email") or body.email
+    user_meta = user_data.get("user_metadata") or {}
+    name = user_meta.get("name") or user_meta.get("full_name")
+    if user_id:
+        await supa.ensure_user_profile(user_id, email, name)
     return _session(d)
 
 
@@ -59,6 +79,11 @@ async def login(body: Credentials):
 async def refresh(body: RefreshRequest):
     d = await supa.auth_call("token", {"refresh_token": body.refresh_token},
                              params={"grant_type": "refresh_token"})
+    user_data = d.get("user") or {}
+    user_id = user_data.get("id")
+    email = user_data.get("email")
+    if user_id and email:
+        await supa.ensure_user_profile(user_id, email)
     return _session(d)
 
 
@@ -68,12 +93,24 @@ async def google(body: GoogleLogin):
     if body.nonce:
         payload["nonce"] = body.nonce
     d = await supa.auth_call("token", payload, params={"grant_type": "id_token"})
+    user_data = d.get("user") or {}
+    user_id = user_data.get("id")
+    email = user_data.get("email")
+    user_meta = user_data.get("user_metadata") or {}
+    name = user_meta.get("name") or user_meta.get("full_name")
+    if user_id and email:
+        await supa.ensure_user_profile(user_id, email, name)
     return _session(d)
 
 
 @app.get("/me")
 async def me(user: AuthUser = Depends(current_user)):
-    return {"id": user.id, "email": user.email}
+    profile = await supa.get_user_profile(user.id)
+    if not profile:
+        profile = await supa.ensure_user_profile(user.id, user.email)
+    if profile:
+        return profile
+    return {"user_id": user.id, "email": user.email, "name": None, "premium": False, "request_limits": 10}
 
 
 # ------------------------------------------------------------------ notes

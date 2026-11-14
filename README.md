@@ -142,3 +142,17 @@ This keyboard only sends text to the Anthropic API when you **explicitly tap ↓
 | AI returns error | Check your Anthropic API key in the app settings |
 | Notes not loading | Verify Supabase URL and anon key; check you ran the SQL setup |
 | Build fails | Make sure you're using Android Studio Hedgehog or newer |
+
+
+
+
+
+
+
+
+
+
+---
+Internal Dev Notes:
+- Backend is hosted on render (shakyageneral@gmail.com)
+- Supabase , google cloud console projects are on main (priyanshartshakya@gmail.com)

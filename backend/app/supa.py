@@ -56,3 +56,31 @@ async def rest(method: str, table: str, *, params: dict | None = None,
         log.error("PostgREST %s %s -> %s %s", method, table, r.status_code, r.text[:300])
         raise HTTPException(502, "Database error")
     return r.json() if r.content else []
+
+
+async def ensure_user_profile(user_id: str, email: str, name: str | None = None) -> dict | None:
+    """Ensure user profile row exists in 'users' table (creates if missing, updates email/name if changed)."""
+    payload: dict = {"user_id": user_id, "email": email}
+    if name is not None:
+        payload["name"] = name
+    try:
+        rows = await rest(
+            "POST",
+            "users",
+            json=payload,
+            prefer="resolution=merge-duplicates,return=representation",
+        )
+        return rows[0] if rows else None
+    except Exception as e:
+        log.error("Failed to ensure user profile for %s: %s", user_id, e)
+        return None
+
+
+async def get_user_profile(user_id: str) -> dict | None:
+    """Fetch user profile row from 'users' table."""
+    try:
+        rows = await rest("GET", "users", params={"user_id": f"eq.{user_id}"})
+        return rows[0] if rows else None
+    except Exception as e:
+        log.error("Failed to fetch user profile for %s: %s", user_id, e)
+        return None
