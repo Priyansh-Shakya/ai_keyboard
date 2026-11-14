@@ -39,6 +39,30 @@
         android:layout_width="match_parent" android:layout_height="260dp"
         android:orientation="vertical" android:visibility="gone" android:background="@color/panel_bg">
 
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="32dp"
+            android:orientation="horizontal" android:gravity="center_vertical"
+            android:paddingStart="10dp" android:paddingEnd="10dp"
+            android:background="@color/brand_surface">
+            <TextView
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="AI Assistant" android:textColor="@color/text_secondary" android:textSize="11sp" />
+            <TextView android:id="@+id/ai_limit_badge"
+                android:layout_width="wrap_content" android:layout_height="22dp"
+                android:background="@drawable/bg_key_special"
+                android:paddingStart="8dp" android:paddingEnd="8dp"
+                android:gravity="center"
+                android:textColor="@color/brand_accent" android:textSize="11sp"
+                android:text="⚡ 10" />
+        </LinearLayout>
+
+        <TextView android:id="@+id/ai_info_card"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="@color/brand_card"
+            android:padding="8dp" android:textSize="11sp" android:textColor="@color/text_primary"
+            android:text="ℹ️ Indicates how many requests are left for your session. Requests are re-filled every 24 hours."
+            android:visibility="gone" />
+
         <ScrollView android:id="@+id/ai_scroll"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
             android:padding="8dp" android:clipToPadding="false">

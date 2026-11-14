@@ -144,10 +144,25 @@ class ApiClient(context: Context) {
     suspend fun deleteNote(id: String): Result<Unit> =
         callAuthed { t -> req(t, "notes/$id").delete().build() }.map { }
 
+    // ───────────────────────── user limits ─────────────────────────
+
+    data class UserLimits(val userId: String, val requestLimits: Int, val premium: Boolean)
+
+    suspend fun getUserLimits(): Result<UserLimits> =
+        callAuthed { t -> req(t, "user/limits").get().build() }
+            .mapCatching { json ->
+                val obj = gson.fromJson(json, JsonObject::class.java)
+                UserLimits(
+                    userId = obj.get("user_id")?.asString.orEmpty(),
+                    requestLimits = obj.get("request_limits")?.asInt ?: 10,
+                    premium = obj.get("premium")?.asBoolean ?: false
+                )
+            }
+
     // ───────────────────────── chat (streaming) ─────────────────────────
 
     /** Streams the reply; [onDelta] is invoked on the main thread for every text chunk. */
-    suspend fun chatStream(messages: List<ChatMessage>, onDelta: suspend (String) -> Unit): Result<String> =
+    suspend fun chatStream(messages: List<ChatMessage>, onDelta: suspend (String) -> Unit, onRemaining: ((Int) -> Unit)? = null): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val body = gson.toJson(mapOf("messages" to messages.map {
@@ -171,6 +186,9 @@ class ApiClient(context: Context) {
                         val obj = gson.fromJson(data, JsonObject::class.java) ?: continue
                         obj.get("error")?.let {
                             return@use Result.failure<String>(ApiException(502, it.asString))
+                        }
+                        obj.get("remaining_requests")?.asInt?.let { rem ->
+                            withContext(Dispatchers.Main) { onRemaining?.invoke(rem) }
                         }
                         obj.get("delta")?.asString?.let { d ->
                             full.append(d)

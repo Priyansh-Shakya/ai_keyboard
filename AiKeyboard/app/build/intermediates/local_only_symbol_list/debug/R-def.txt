@@ -42,7 +42,9 @@ drawable bg_setup
 drawable bg_tab_selected
 drawable bg_tab_unselected
 drawable ic_launcher_foreground
+id ai_info_card
 id ai_input
+id ai_limit_badge
 id ai_loading
 id ai_messages_container
 id ai_scroll

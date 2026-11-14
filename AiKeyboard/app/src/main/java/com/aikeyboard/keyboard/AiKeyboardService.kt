@@ -66,6 +66,12 @@ class AiKeyboardService : InputMethodService() {
     private lateinit var notesAdapter: NotesAdapter
     private lateinit var clipboardAdapter: ClipboardAdapter
     private val letterViews = mutableListOf<Pair<TextView, String>>()
+    private var remainingRequests = 10
+    private var isPremiumUser = false
+    private var isCapsLock = false
+    private var lastShiftTapTime = 0L
+    private lateinit var aiLimitBadge: TextView
+    private lateinit var aiInfoCard: TextView
 
     private val clipboardManager by lazy { getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
@@ -126,6 +132,7 @@ class AiKeyboardService : InputMethodService() {
         setupAiPanel()
         setupNotesPanel()
         setupClipboardPanel()
+        fetchUserLimits()
         try {
             clipboardManager.addPrimaryClipChangedListener(clipListener)
         } catch (e: Exception) {}
@@ -167,13 +174,15 @@ class AiKeyboardService : InputMethodService() {
         clipRecycler = id(R.id.clip_recycler)
         clipStatus = id(R.id.clip_status)
         btnClearClip = id(R.id.btn_clear_clip)
+        aiLimitBadge = id(R.id.ai_limit_badge)
+        aiInfoCard = id(R.id.ai_info_card)
     }
 
     // ── toolbar, tabs & layout ──
 
     private fun setupToolbar() {
         tabKeyboard.setOnClickListener { showTab(Tab.KEYBOARD) }
-        tabAi.setOnClickListener { showTab(Tab.AI) }
+        tabAi.setOnClickListener { showTab(Tab.AI); fetchUserLimits() }
         tabNotes.setOnClickListener { showTab(Tab.NOTES); showNotesList(); loadNotes() }
         tabClipboard.setOnClickListener { showTab(Tab.CLIPBOARD); loadClipboard() }
         btnMode.setOnClickListener { setAiMode(!aiMode) }
@@ -623,7 +632,10 @@ class AiKeyboardService : InputMethodService() {
                 letterViews.add(v to c.toString())
                 onKeyDown(v) {
                     commit(if (isShifted) c.toString().uppercase() else c.toString())
-                    if (isShifted) { isShifted = false; updateShift() }
+                    if (isShifted && !isCapsLock) {
+                        isShifted = false
+                        updateShift()
+                    }
                 }
             }
         }
@@ -637,7 +649,24 @@ class AiKeyboardService : InputMethodService() {
         if (delKey != null) makeSwipeableDelete(delKey)
         if (keyReturn != null) onTapOrHold(keyReturn, onTap = { enterKey() }, onHold = { holdEnter() })
         val shiftKey = rootView.findViewById<View>(R.id.key_shift)
-        if (shiftKey != null) onKeyDown(shiftKey) { isShifted = !isShifted; updateShift() }
+        if (shiftKey != null) {
+            onKeyDown(shiftKey) {
+                val now = System.currentTimeMillis()
+                if (now - lastShiftTapTime < 300) {
+                    isCapsLock = !isCapsLock
+                    isShifted = isCapsLock
+                } else {
+                    if (isCapsLock) {
+                        isCapsLock = false
+                        isShifted = false
+                    } else {
+                        isShifted = !isShifted
+                    }
+                }
+                lastShiftTapTime = now
+                updateShift()
+            }
+        }
         val symKey = rootView.findViewById<TextView>(R.id.key_symbols)
         symKey?.setOnClickListener { isSymbolMode = true; refreshLayout() }
 
@@ -668,7 +697,10 @@ class AiKeyboardService : InputMethodService() {
     private fun updateShift() {
         letterViews.forEach { (v, c) -> v.text = if (isShifted) c.uppercase() else c }
         val key = rootView.findViewById<TextView>(R.id.key_shift)
-        key.setTextColor(ContextCompat.getColor(this, if (isShifted) R.color.brand_accent else R.color.text_secondary))
+        if (key != null) {
+            key.text = if (isCapsLock) "⇪" else "⇧"
+            key.setTextColor(ContextCompat.getColor(this, if (isShifted) R.color.brand_accent else R.color.text_secondary))
+        }
     }
 
     private fun hostText(): String {
@@ -701,6 +733,10 @@ class AiKeyboardService : InputMethodService() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupAiPanel() {
         makeLocalInput(aiInput)
+        aiLimitBadge.setOnClickListener {
+            aiInfoCard.visibility = if (aiInfoCard.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+        fetchUserLimits()
         aiScroll.setOnTouchListener { _, ev ->                   // tap the replies = hide keys, read in peace
             if (ev.action == MotionEvent.ACTION_DOWN && localTarget != null) deactivateLocal()
             false
@@ -711,6 +747,31 @@ class AiKeyboardService : InputMethodService() {
                 currentInputConnection?.commitText(lastAiResponse, 1)
                 showTab(Tab.KEYBOARD)
             }
+        }
+    }
+
+    private fun fetchUserLimits() {
+        scope.launch {
+            api.getUserLimits().onSuccess { limits ->
+                remainingRequests = limits.requestLimits
+                isPremiumUser = limits.premium
+                updateLimitBadge()
+            }
+        }
+    }
+
+    private fun setAiInputEnabled(enabled: Boolean) {
+        aiInput.isEnabled = enabled
+        aiInput.hint = if (enabled) "Ask AI anything…" else "Limit reached. Upgrade in app."
+        btnSendAi.isEnabled = enabled
+    }
+
+    private fun updateLimitBadge() {
+        aiLimitBadge.text = if (isPremiumUser) "⚡ ∞" else "⚡ $remainingRequests"
+        if (!isPremiumUser && remainingRequests <= 0) {
+            setAiInputEnabled(false)
+        } else {
+            setAiInputEnabled(true)
         }
     }
 
@@ -740,17 +801,31 @@ class AiKeyboardService : InputMethodService() {
 
     private fun sendToAi(prompt: String) {
         if (chatJob?.isActive == true) { toast("Wait for the current reply…"); return }
+        if (!isPremiumUser && remainingRequests <= 0) {
+            toast("Request limit reached. Upgrade to premium.")
+            return
+        }
         addBubble(prompt, true)
         chatHistory.add(ChatMessage("user", prompt))
         val bubble = addBubble("", false)
         val body = bubble.findViewById<TextView>(R.id.bubble_text)
         aiLoading.visibility = View.VISIBLE
 
+        if (!isPremiumUser) {
+            remainingRequests = maxOf(0, remainingRequests - 1)
+            updateLimitBadge()
+        }
+
         chatJob = scope.launch {
             val sb = StringBuilder()
-            val result = api.chatStream(chatHistory.toList()) { d ->
-                sb.append(d); body.text = sb.toString(); scrollAiToBottom()
-            }
+            val result = api.chatStream(
+                messages = chatHistory.toList(),
+                onDelta = { d -> sb.append(d); body.text = sb.toString(); scrollAiToBottom() },
+                onRemaining = { rem ->
+                    remainingRequests = rem
+                    updateLimitBadge()
+                }
+            )
             aiLoading.visibility = View.GONE
             result.onSuccess { full ->
                 if (full.isBlank()) {
@@ -761,11 +836,21 @@ class AiKeyboardService : InputMethodService() {
                     lastAiResponse = full
                     bubble.findViewById<TextView>(R.id.bubble_copy).apply {
                         visibility = View.VISIBLE
-                        setOnClickListener { copyToClipboard(full) }
+                        text = "📋 copy"
+                        setOnClickListener {
+                            copyToClipboard(full)
+                            text = "✓ copied"
+                            postDelayed({ text = "📋 copy" }, 1500)
+                        }
                     }
                 }
-            }.onFailure {
-                body.text = "⚠ ${it.message ?: "Something went wrong"}"
+            }.onFailure { err ->
+                val msg = err.message ?: "Something went wrong"
+                body.text = "⚠ $msg"
+                if (msg.contains("limit reached", ignoreCase = true) || msg.contains("403") || msg.contains("limit")) {
+                    body.text = "⚠ Request limit reached. Upgrade to premium to continue."
+                    setAiInputEnabled(false)
+                }
                 chatHistory.removeAt(chatHistory.lastIndex)      // keep user/assistant alternation valid
             }
             scrollAiToBottom()

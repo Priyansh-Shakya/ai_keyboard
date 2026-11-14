@@ -89,29 +89,26 @@ async def get_user_profile(user_id: str) -> dict | None:
 async def decrement_request_limit(user_id: str) -> dict | None:
     """Decrement request_limits for non-premium user by 1 and return updated profile."""
     try:
-        rows = await rest("POST", "rpc/decrement_user_request_limit", json={"target_user_id": user_id})
-        if rows:
-            res = rows[0] if isinstance(rows, list) and rows else rows
-            if isinstance(res, dict) and "request_limits" in res:
-                return res
-    except Exception:
-        pass
-
-    try:
         profile = await get_user_profile(user_id)
-        if profile:
-            if not profile.get("premium", False):
-                curr = profile.get("request_limits", 10)
-                if curr > 0:
-                    rows = await rest(
-                        "PATCH",
-                        "users",
-                        params={"user_id": f"eq.{user_id}"},
-                        json={"request_limits": curr - 1},
-                        prefer="return=representation",
-                    )
-                    return rows[0] if rows and isinstance(rows, list) else profile
+        if not profile:
+            return None
+        if profile.get("premium", False):
             return profile
+        curr = profile.get("request_limits", 10)
+        if curr > 0:
+            new_val = curr - 1
+            rows = await rest(
+                "PATCH",
+                "users",
+                params={"user_id": f"eq.{user_id}"},
+                json={"request_limits": new_val},
+                prefer="return=representation",
+            )
+            if rows and isinstance(rows, list):
+                return rows[0]
+            profile["request_limits"] = new_val
+            return profile
+        return profile
     except Exception as e:
         log.error("Failed to decrement request limit for %s: %s", user_id, e)
     return None

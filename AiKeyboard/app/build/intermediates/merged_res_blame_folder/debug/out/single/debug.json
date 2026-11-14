@@ -12,10 +12,6 @@
         "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_fab.xml"
     },
     {
-        "merged": "com.aikeyboard.app-merged_res-39:/layout_item_clipboard.xml.flat",
-        "source": "com.aikeyboard.app-main-41:/layout/item_clipboard.xml"
-    },
-    {
         "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/mipmap-anydpi-v26_ic_launcher.xml.flat",
         "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/mipmap-anydpi-v26/ic_launcher.xml"
     },
@@ -98,6 +94,10 @@
     {
         "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_settings_field.xml.flat",
         "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/drawable/bg_settings_field.xml"
+    },
+    {
+        "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/layout_item_clipboard.xml.flat",
+        "source": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-main-41:/layout/item_clipboard.xml"
     },
     {
         "merged": "/home/priyansh/.gradle/daemon/8.12/com.aikeyboard.app-merged_res-39:/drawable_bg_key_normal.xml.flat",

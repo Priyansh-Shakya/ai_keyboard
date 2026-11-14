@@ -3230,7 +3230,9 @@ id activity_chooser_view_content
 id add
 id adjust_height
 id adjust_width
+id ai_info_card
 id ai_input
+id ai_limit_badge
 id ai_loading
 id ai_messages_container
 id ai_scroll
