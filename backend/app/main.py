@@ -113,6 +113,18 @@ async def me(user: AuthUser = Depends(current_user)):
     return {"user_id": user.id, "email": user.email, "name": None, "premium": False, "request_limits": 10}
 
 
+@app.get("/user/limits")
+async def get_user_limits(user: AuthUser = Depends(current_user)):
+    profile = await supa.get_user_profile(user.id)
+    if not profile:
+        profile = await supa.ensure_user_profile(user.id, user.email)
+    return {
+        "user_id": user.id,
+        "request_limits": profile.get("request_limits", 10) if profile else 10,
+        "premium": profile.get("premium", False) if profile else False,
+    }
+
+
 # ------------------------------------------------------------------ notes
 @app.get("/notes")
 async def list_notes(user: AuthUser = Depends(current_user)):
@@ -155,16 +167,48 @@ async def delete_note(note_id: UUID, user: AuthUser = Depends(current_user)):
 @app.post("/chat")
 async def chat(body: ChatRequest, user: AuthUser = Depends(current_user)):
     rate_limit(user.id)
+    profile = await supa.get_user_profile(user.id)
+    if not profile:
+        profile = await supa.ensure_user_profile(user.id, user.email)
+
+    is_premium = profile.get("premium", False) if profile else False
+    remaining_limits = profile.get("request_limits", 10) if profile else 10
+
+    if not is_premium and remaining_limits <= 0:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "request_limit_exceeded",
+                "message": "Request limit reached. Upgrade to premium for unlimited requests.",
+                "user_id": user.id,
+                "request_limits": 0,
+                "premium": False,
+            },
+        )
+
     msgs = [m.model_dump() for m in body.messages]
 
     async def events():
+        llm_success = False
         try:
             async for delta in llm.stream_reply(msgs):
                 yield f"data: {json.dumps({'delta': delta})}\n\n"
-            yield "data: [DONE]\n\n"
+            llm_success = True
         except Exception:
             log.exception("LLM provider error")
             yield f"data: {json.dumps({'error': 'The AI provider returned an error. Try again.'})}\n\n"
+
+        if llm_success:
+            updated_profile = await supa.decrement_request_limit(user.id)
+            if updated_profile and "request_limits" in updated_profile:
+                rem = updated_profile["request_limits"]
+            elif not is_premium:
+                rem = max(0, remaining_limits - 1)
+            else:
+                rem = remaining_limits
+
+            yield f"data: {json.dumps({'remaining_requests': rem})}\n\n"
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

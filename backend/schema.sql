@@ -64,3 +64,17 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- RPC function to atomically decrement request_limits for non-premium users
+CREATE OR REPLACE FUNCTION public.decrement_user_request_limit(target_user_id UUID)
+RETURNS SETOF public.users AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE public.users
+    SET request_limits = GREATEST(0, public.users.request_limits - 1)
+    WHERE public.users.user_id = target_user_id
+      AND public.users.premium = FALSE
+      AND public.users.request_limits > 0
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
