@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.aikeyboard.R;
+import com.aikeyboard.keyboard.KeyboardCanvasView;
 import java.lang.NullPointerException;
 import java.lang.Override;
 import java.lang.String;
@@ -69,136 +70,10 @@ public final class KeyboardViewBinding implements ViewBinding {
   public final TextView clipStatus;
 
   @NonNull
-  public final TextView key0;
-
-  @NonNull
-  public final TextView key1;
-
-  @NonNull
-  public final TextView key2;
-
-  @NonNull
-  public final TextView key3;
-
-  @NonNull
-  public final TextView key4;
-
-  @NonNull
-  public final TextView key5;
-
-  @NonNull
-  public final TextView key6;
-
-  @NonNull
-  public final TextView key7;
-
-  @NonNull
-  public final TextView key8;
-
-  @NonNull
-  public final TextView key9;
-
-  @NonNull
-  public final TextView keyA;
-
-  @NonNull
-  public final TextView keyB;
-
-  @NonNull
-  public final TextView keyC;
-
-  @NonNull
-  public final TextView keyComma;
-
-  @NonNull
-  public final TextView keyD;
-
-  @NonNull
-  public final TextView keyDelete;
-
-  @NonNull
-  public final TextView keyE;
-
-  @NonNull
-  public final TextView keyF;
-
-  @NonNull
-  public final TextView keyG;
-
-  @NonNull
-  public final TextView keyH;
-
-  @NonNull
-  public final TextView keyI;
-
-  @NonNull
-  public final TextView keyJ;
-
-  @NonNull
-  public final TextView keyK;
-
-  @NonNull
-  public final TextView keyL;
-
-  @NonNull
-  public final TextView keyM;
-
-  @NonNull
-  public final TextView keyN;
-
-  @NonNull
-  public final TextView keyO;
-
-  @NonNull
-  public final TextView keyP;
-
-  @NonNull
-  public final TextView keyPeriod;
-
-  @NonNull
-  public final TextView keyQ;
-
-  @NonNull
-  public final TextView keyR;
-
-  @NonNull
-  public final TextView keyReturn;
-
-  @NonNull
-  public final TextView keyS;
-
-  @NonNull
-  public final TextView keyShift;
-
-  @NonNull
-  public final TextView keySpace;
-
-  @NonNull
-  public final TextView keySymbols;
-
-  @NonNull
-  public final TextView keyT;
-
-  @NonNull
-  public final TextView keyU;
-
-  @NonNull
-  public final TextView keyV;
-
-  @NonNull
-  public final TextView keyW;
-
-  @NonNull
-  public final TextView keyX;
-
-  @NonNull
-  public final TextView keyY;
-
-  @NonNull
-  public final TextView keyZ;
-
-  @NonNull
   public final LinearLayout keyboardRoot;
+
+  @NonNull
+  public final KeyboardCanvasView keysView;
 
   @NonNull
   public final EditText noteContentInput;
@@ -225,121 +100,22 @@ public final class KeyboardViewBinding implements ViewBinding {
   public final FrameLayout panelClipboard;
 
   @NonNull
-  public final LinearLayout panelKeyboard;
-
-  @NonNull
   public final FrameLayout panelNotes;
-
-  @NonNull
-  public final LinearLayout panelSymbols;
 
   @NonNull
   public final EditText promptInput;
 
   @NonNull
-  public final TextView sym0;
+  public final TextView sug1;
 
   @NonNull
-  public final TextView sym1;
+  public final TextView sug2;
 
   @NonNull
-  public final TextView sym2;
+  public final TextView sug3;
 
   @NonNull
-  public final TextView sym3;
-
-  @NonNull
-  public final TextView sym4;
-
-  @NonNull
-  public final TextView sym5;
-
-  @NonNull
-  public final TextView sym6;
-
-  @NonNull
-  public final TextView sym7;
-
-  @NonNull
-  public final TextView sym8;
-
-  @NonNull
-  public final TextView sym9;
-
-  @NonNull
-  public final TextView symAbc;
-
-  @NonNull
-  public final TextView symAmp;
-
-  @NonNull
-  public final TextView symAt;
-
-  @NonNull
-  public final TextView symColon;
-
-  @NonNull
-  public final TextView symComma;
-
-  @NonNull
-  public final TextView symDel2;
-
-  @NonNull
-  public final TextView symDollar;
-
-  @NonNull
-  public final TextView symDquote;
-
-  @NonNull
-  public final TextView symEq;
-
-  @NonNull
-  public final TextView symExcl;
-
-  @NonNull
-  public final TextView symHash;
-
-  @NonNull
-  public final TextView symLparen;
-
-  @NonNull
-  public final TextView symMinus;
-
-  @NonNull
-  public final TextView symPercent;
-
-  @NonNull
-  public final TextView symPeriod;
-
-  @NonNull
-  public final TextView symPlus;
-
-  @NonNull
-  public final TextView symQuest;
-
-  @NonNull
-  public final TextView symQuote;
-
-  @NonNull
-  public final TextView symReturn;
-
-  @NonNull
-  public final TextView symRparen;
-
-  @NonNull
-  public final TextView symSemi;
-
-  @NonNull
-  public final TextView symSlash;
-
-  @NonNull
-  public final TextView symSpace;
-
-  @NonNull
-  public final TextView symStar;
-
-  @NonNull
-  public final TextView symUnder;
+  public final LinearLayout suggestionBar;
 
   @NonNull
   public final TextView tabAi;
@@ -365,41 +141,16 @@ public final class KeyboardViewBinding implements ViewBinding {
       @NonNull TextView btnCancelNote, @NonNull TextView btnClearClip, @NonNull TextView btnMode,
       @NonNull TextView btnNewNote, @NonNull TextView btnSaveNote, @NonNull TextView btnSendAi,
       @NonNull TextView btnUseResponse, @NonNull RecyclerView clipRecycler,
-      @NonNull TextView clipStatus, @NonNull TextView key0, @NonNull TextView key1,
-      @NonNull TextView key2, @NonNull TextView key3, @NonNull TextView key4,
-      @NonNull TextView key5, @NonNull TextView key6, @NonNull TextView key7,
-      @NonNull TextView key8, @NonNull TextView key9, @NonNull TextView keyA,
-      @NonNull TextView keyB, @NonNull TextView keyC, @NonNull TextView keyComma,
-      @NonNull TextView keyD, @NonNull TextView keyDelete, @NonNull TextView keyE,
-      @NonNull TextView keyF, @NonNull TextView keyG, @NonNull TextView keyH,
-      @NonNull TextView keyI, @NonNull TextView keyJ, @NonNull TextView keyK,
-      @NonNull TextView keyL, @NonNull TextView keyM, @NonNull TextView keyN,
-      @NonNull TextView keyO, @NonNull TextView keyP, @NonNull TextView keyPeriod,
-      @NonNull TextView keyQ, @NonNull TextView keyR, @NonNull TextView keyReturn,
-      @NonNull TextView keyS, @NonNull TextView keyShift, @NonNull TextView keySpace,
-      @NonNull TextView keySymbols, @NonNull TextView keyT, @NonNull TextView keyU,
-      @NonNull TextView keyV, @NonNull TextView keyW, @NonNull TextView keyX,
-      @NonNull TextView keyY, @NonNull TextView keyZ, @NonNull LinearLayout keyboardRoot,
-      @NonNull EditText noteContentInput, @NonNull EditText noteTitleInput,
-      @NonNull LinearLayout notesEditView, @NonNull LinearLayout notesListView,
-      @NonNull RecyclerView notesRecycler, @NonNull TextView notesStatus,
-      @NonNull LinearLayout panelAi, @NonNull FrameLayout panelClipboard,
-      @NonNull LinearLayout panelKeyboard, @NonNull FrameLayout panelNotes,
-      @NonNull LinearLayout panelSymbols, @NonNull EditText promptInput, @NonNull TextView sym0,
-      @NonNull TextView sym1, @NonNull TextView sym2, @NonNull TextView sym3,
-      @NonNull TextView sym4, @NonNull TextView sym5, @NonNull TextView sym6,
-      @NonNull TextView sym7, @NonNull TextView sym8, @NonNull TextView sym9,
-      @NonNull TextView symAbc, @NonNull TextView symAmp, @NonNull TextView symAt,
-      @NonNull TextView symColon, @NonNull TextView symComma, @NonNull TextView symDel2,
-      @NonNull TextView symDollar, @NonNull TextView symDquote, @NonNull TextView symEq,
-      @NonNull TextView symExcl, @NonNull TextView symHash, @NonNull TextView symLparen,
-      @NonNull TextView symMinus, @NonNull TextView symPercent, @NonNull TextView symPeriod,
-      @NonNull TextView symPlus, @NonNull TextView symQuest, @NonNull TextView symQuote,
-      @NonNull TextView symReturn, @NonNull TextView symRparen, @NonNull TextView symSemi,
-      @NonNull TextView symSlash, @NonNull TextView symSpace, @NonNull TextView symStar,
-      @NonNull TextView symUnder, @NonNull TextView tabAi, @NonNull TextView tabClipboard,
-      @NonNull LinearLayout tabGroup, @NonNull TextView tabKeyboard, @NonNull TextView tabNotes,
-      @NonNull LinearLayout toolbar) {
+      @NonNull TextView clipStatus, @NonNull LinearLayout keyboardRoot,
+      @NonNull KeyboardCanvasView keysView, @NonNull EditText noteContentInput,
+      @NonNull EditText noteTitleInput, @NonNull LinearLayout notesEditView,
+      @NonNull LinearLayout notesListView, @NonNull RecyclerView notesRecycler,
+      @NonNull TextView notesStatus, @NonNull LinearLayout panelAi,
+      @NonNull FrameLayout panelClipboard, @NonNull FrameLayout panelNotes,
+      @NonNull EditText promptInput, @NonNull TextView sug1, @NonNull TextView sug2,
+      @NonNull TextView sug3, @NonNull LinearLayout suggestionBar, @NonNull TextView tabAi,
+      @NonNull TextView tabClipboard, @NonNull LinearLayout tabGroup, @NonNull TextView tabKeyboard,
+      @NonNull TextView tabNotes, @NonNull LinearLayout toolbar) {
     this.rootView = rootView;
     this.aiInfoCard = aiInfoCard;
     this.aiInput = aiInput;
@@ -416,50 +167,8 @@ public final class KeyboardViewBinding implements ViewBinding {
     this.btnUseResponse = btnUseResponse;
     this.clipRecycler = clipRecycler;
     this.clipStatus = clipStatus;
-    this.key0 = key0;
-    this.key1 = key1;
-    this.key2 = key2;
-    this.key3 = key3;
-    this.key4 = key4;
-    this.key5 = key5;
-    this.key6 = key6;
-    this.key7 = key7;
-    this.key8 = key8;
-    this.key9 = key9;
-    this.keyA = keyA;
-    this.keyB = keyB;
-    this.keyC = keyC;
-    this.keyComma = keyComma;
-    this.keyD = keyD;
-    this.keyDelete = keyDelete;
-    this.keyE = keyE;
-    this.keyF = keyF;
-    this.keyG = keyG;
-    this.keyH = keyH;
-    this.keyI = keyI;
-    this.keyJ = keyJ;
-    this.keyK = keyK;
-    this.keyL = keyL;
-    this.keyM = keyM;
-    this.keyN = keyN;
-    this.keyO = keyO;
-    this.keyP = keyP;
-    this.keyPeriod = keyPeriod;
-    this.keyQ = keyQ;
-    this.keyR = keyR;
-    this.keyReturn = keyReturn;
-    this.keyS = keyS;
-    this.keyShift = keyShift;
-    this.keySpace = keySpace;
-    this.keySymbols = keySymbols;
-    this.keyT = keyT;
-    this.keyU = keyU;
-    this.keyV = keyV;
-    this.keyW = keyW;
-    this.keyX = keyX;
-    this.keyY = keyY;
-    this.keyZ = keyZ;
     this.keyboardRoot = keyboardRoot;
+    this.keysView = keysView;
     this.noteContentInput = noteContentInput;
     this.noteTitleInput = noteTitleInput;
     this.notesEditView = notesEditView;
@@ -468,45 +177,12 @@ public final class KeyboardViewBinding implements ViewBinding {
     this.notesStatus = notesStatus;
     this.panelAi = panelAi;
     this.panelClipboard = panelClipboard;
-    this.panelKeyboard = panelKeyboard;
     this.panelNotes = panelNotes;
-    this.panelSymbols = panelSymbols;
     this.promptInput = promptInput;
-    this.sym0 = sym0;
-    this.sym1 = sym1;
-    this.sym2 = sym2;
-    this.sym3 = sym3;
-    this.sym4 = sym4;
-    this.sym5 = sym5;
-    this.sym6 = sym6;
-    this.sym7 = sym7;
-    this.sym8 = sym8;
-    this.sym9 = sym9;
-    this.symAbc = symAbc;
-    this.symAmp = symAmp;
-    this.symAt = symAt;
-    this.symColon = symColon;
-    this.symComma = symComma;
-    this.symDel2 = symDel2;
-    this.symDollar = symDollar;
-    this.symDquote = symDquote;
-    this.symEq = symEq;
-    this.symExcl = symExcl;
-    this.symHash = symHash;
-    this.symLparen = symLparen;
-    this.symMinus = symMinus;
-    this.symPercent = symPercent;
-    this.symPeriod = symPeriod;
-    this.symPlus = symPlus;
-    this.symQuest = symQuest;
-    this.symQuote = symQuote;
-    this.symReturn = symReturn;
-    this.symRparen = symRparen;
-    this.symSemi = symSemi;
-    this.symSlash = symSlash;
-    this.symSpace = symSpace;
-    this.symStar = symStar;
-    this.symUnder = symUnder;
+    this.sug1 = sug1;
+    this.sug2 = sug2;
+    this.sug3 = sug3;
+    this.suggestionBar = suggestionBar;
     this.tabAi = tabAi;
     this.tabClipboard = tabClipboard;
     this.tabGroup = tabGroup;
@@ -632,265 +308,13 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.key_0;
-      TextView key0 = ViewBindings.findChildViewById(rootView, id);
-      if (key0 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_1;
-      TextView key1 = ViewBindings.findChildViewById(rootView, id);
-      if (key1 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_2;
-      TextView key2 = ViewBindings.findChildViewById(rootView, id);
-      if (key2 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_3;
-      TextView key3 = ViewBindings.findChildViewById(rootView, id);
-      if (key3 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_4;
-      TextView key4 = ViewBindings.findChildViewById(rootView, id);
-      if (key4 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_5;
-      TextView key5 = ViewBindings.findChildViewById(rootView, id);
-      if (key5 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_6;
-      TextView key6 = ViewBindings.findChildViewById(rootView, id);
-      if (key6 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_7;
-      TextView key7 = ViewBindings.findChildViewById(rootView, id);
-      if (key7 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_8;
-      TextView key8 = ViewBindings.findChildViewById(rootView, id);
-      if (key8 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_9;
-      TextView key9 = ViewBindings.findChildViewById(rootView, id);
-      if (key9 == null) {
-        break missingId;
-      }
-
-      id = R.id.key_a;
-      TextView keyA = ViewBindings.findChildViewById(rootView, id);
-      if (keyA == null) {
-        break missingId;
-      }
-
-      id = R.id.key_b;
-      TextView keyB = ViewBindings.findChildViewById(rootView, id);
-      if (keyB == null) {
-        break missingId;
-      }
-
-      id = R.id.key_c;
-      TextView keyC = ViewBindings.findChildViewById(rootView, id);
-      if (keyC == null) {
-        break missingId;
-      }
-
-      id = R.id.key_comma;
-      TextView keyComma = ViewBindings.findChildViewById(rootView, id);
-      if (keyComma == null) {
-        break missingId;
-      }
-
-      id = R.id.key_d;
-      TextView keyD = ViewBindings.findChildViewById(rootView, id);
-      if (keyD == null) {
-        break missingId;
-      }
-
-      id = R.id.key_delete;
-      TextView keyDelete = ViewBindings.findChildViewById(rootView, id);
-      if (keyDelete == null) {
-        break missingId;
-      }
-
-      id = R.id.key_e;
-      TextView keyE = ViewBindings.findChildViewById(rootView, id);
-      if (keyE == null) {
-        break missingId;
-      }
-
-      id = R.id.key_f;
-      TextView keyF = ViewBindings.findChildViewById(rootView, id);
-      if (keyF == null) {
-        break missingId;
-      }
-
-      id = R.id.key_g;
-      TextView keyG = ViewBindings.findChildViewById(rootView, id);
-      if (keyG == null) {
-        break missingId;
-      }
-
-      id = R.id.key_h;
-      TextView keyH = ViewBindings.findChildViewById(rootView, id);
-      if (keyH == null) {
-        break missingId;
-      }
-
-      id = R.id.key_i;
-      TextView keyI = ViewBindings.findChildViewById(rootView, id);
-      if (keyI == null) {
-        break missingId;
-      }
-
-      id = R.id.key_j;
-      TextView keyJ = ViewBindings.findChildViewById(rootView, id);
-      if (keyJ == null) {
-        break missingId;
-      }
-
-      id = R.id.key_k;
-      TextView keyK = ViewBindings.findChildViewById(rootView, id);
-      if (keyK == null) {
-        break missingId;
-      }
-
-      id = R.id.key_l;
-      TextView keyL = ViewBindings.findChildViewById(rootView, id);
-      if (keyL == null) {
-        break missingId;
-      }
-
-      id = R.id.key_m;
-      TextView keyM = ViewBindings.findChildViewById(rootView, id);
-      if (keyM == null) {
-        break missingId;
-      }
-
-      id = R.id.key_n;
-      TextView keyN = ViewBindings.findChildViewById(rootView, id);
-      if (keyN == null) {
-        break missingId;
-      }
-
-      id = R.id.key_o;
-      TextView keyO = ViewBindings.findChildViewById(rootView, id);
-      if (keyO == null) {
-        break missingId;
-      }
-
-      id = R.id.key_p;
-      TextView keyP = ViewBindings.findChildViewById(rootView, id);
-      if (keyP == null) {
-        break missingId;
-      }
-
-      id = R.id.key_period;
-      TextView keyPeriod = ViewBindings.findChildViewById(rootView, id);
-      if (keyPeriod == null) {
-        break missingId;
-      }
-
-      id = R.id.key_q;
-      TextView keyQ = ViewBindings.findChildViewById(rootView, id);
-      if (keyQ == null) {
-        break missingId;
-      }
-
-      id = R.id.key_r;
-      TextView keyR = ViewBindings.findChildViewById(rootView, id);
-      if (keyR == null) {
-        break missingId;
-      }
-
-      id = R.id.key_return;
-      TextView keyReturn = ViewBindings.findChildViewById(rootView, id);
-      if (keyReturn == null) {
-        break missingId;
-      }
-
-      id = R.id.key_s;
-      TextView keyS = ViewBindings.findChildViewById(rootView, id);
-      if (keyS == null) {
-        break missingId;
-      }
-
-      id = R.id.key_shift;
-      TextView keyShift = ViewBindings.findChildViewById(rootView, id);
-      if (keyShift == null) {
-        break missingId;
-      }
-
-      id = R.id.key_space;
-      TextView keySpace = ViewBindings.findChildViewById(rootView, id);
-      if (keySpace == null) {
-        break missingId;
-      }
-
-      id = R.id.key_symbols;
-      TextView keySymbols = ViewBindings.findChildViewById(rootView, id);
-      if (keySymbols == null) {
-        break missingId;
-      }
-
-      id = R.id.key_t;
-      TextView keyT = ViewBindings.findChildViewById(rootView, id);
-      if (keyT == null) {
-        break missingId;
-      }
-
-      id = R.id.key_u;
-      TextView keyU = ViewBindings.findChildViewById(rootView, id);
-      if (keyU == null) {
-        break missingId;
-      }
-
-      id = R.id.key_v;
-      TextView keyV = ViewBindings.findChildViewById(rootView, id);
-      if (keyV == null) {
-        break missingId;
-      }
-
-      id = R.id.key_w;
-      TextView keyW = ViewBindings.findChildViewById(rootView, id);
-      if (keyW == null) {
-        break missingId;
-      }
-
-      id = R.id.key_x;
-      TextView keyX = ViewBindings.findChildViewById(rootView, id);
-      if (keyX == null) {
-        break missingId;
-      }
-
-      id = R.id.key_y;
-      TextView keyY = ViewBindings.findChildViewById(rootView, id);
-      if (keyY == null) {
-        break missingId;
-      }
-
-      id = R.id.key_z;
-      TextView keyZ = ViewBindings.findChildViewById(rootView, id);
-      if (keyZ == null) {
-        break missingId;
-      }
-
       LinearLayout keyboardRoot = (LinearLayout) rootView;
+
+      id = R.id.keys_view;
+      KeyboardCanvasView keysView = ViewBindings.findChildViewById(rootView, id);
+      if (keysView == null) {
+        break missingId;
+      }
 
       id = R.id.note_content_input;
       EditText noteContentInput = ViewBindings.findChildViewById(rootView, id);
@@ -940,21 +364,9 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.panel_keyboard;
-      LinearLayout panelKeyboard = ViewBindings.findChildViewById(rootView, id);
-      if (panelKeyboard == null) {
-        break missingId;
-      }
-
       id = R.id.panel_notes;
       FrameLayout panelNotes = ViewBindings.findChildViewById(rootView, id);
       if (panelNotes == null) {
-        break missingId;
-      }
-
-      id = R.id.panel_symbols;
-      LinearLayout panelSymbols = ViewBindings.findChildViewById(rootView, id);
-      if (panelSymbols == null) {
         break missingId;
       }
 
@@ -964,213 +376,27 @@ public final class KeyboardViewBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.sym_0;
-      TextView sym0 = ViewBindings.findChildViewById(rootView, id);
-      if (sym0 == null) {
+      id = R.id.sug_1;
+      TextView sug1 = ViewBindings.findChildViewById(rootView, id);
+      if (sug1 == null) {
         break missingId;
       }
 
-      id = R.id.sym_1;
-      TextView sym1 = ViewBindings.findChildViewById(rootView, id);
-      if (sym1 == null) {
+      id = R.id.sug_2;
+      TextView sug2 = ViewBindings.findChildViewById(rootView, id);
+      if (sug2 == null) {
         break missingId;
       }
 
-      id = R.id.sym_2;
-      TextView sym2 = ViewBindings.findChildViewById(rootView, id);
-      if (sym2 == null) {
+      id = R.id.sug_3;
+      TextView sug3 = ViewBindings.findChildViewById(rootView, id);
+      if (sug3 == null) {
         break missingId;
       }
 
-      id = R.id.sym_3;
-      TextView sym3 = ViewBindings.findChildViewById(rootView, id);
-      if (sym3 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_4;
-      TextView sym4 = ViewBindings.findChildViewById(rootView, id);
-      if (sym4 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_5;
-      TextView sym5 = ViewBindings.findChildViewById(rootView, id);
-      if (sym5 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_6;
-      TextView sym6 = ViewBindings.findChildViewById(rootView, id);
-      if (sym6 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_7;
-      TextView sym7 = ViewBindings.findChildViewById(rootView, id);
-      if (sym7 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_8;
-      TextView sym8 = ViewBindings.findChildViewById(rootView, id);
-      if (sym8 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_9;
-      TextView sym9 = ViewBindings.findChildViewById(rootView, id);
-      if (sym9 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_abc;
-      TextView symAbc = ViewBindings.findChildViewById(rootView, id);
-      if (symAbc == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_amp;
-      TextView symAmp = ViewBindings.findChildViewById(rootView, id);
-      if (symAmp == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_at;
-      TextView symAt = ViewBindings.findChildViewById(rootView, id);
-      if (symAt == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_colon;
-      TextView symColon = ViewBindings.findChildViewById(rootView, id);
-      if (symColon == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_comma;
-      TextView symComma = ViewBindings.findChildViewById(rootView, id);
-      if (symComma == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_del2;
-      TextView symDel2 = ViewBindings.findChildViewById(rootView, id);
-      if (symDel2 == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_dollar;
-      TextView symDollar = ViewBindings.findChildViewById(rootView, id);
-      if (symDollar == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_dquote;
-      TextView symDquote = ViewBindings.findChildViewById(rootView, id);
-      if (symDquote == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_eq;
-      TextView symEq = ViewBindings.findChildViewById(rootView, id);
-      if (symEq == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_excl;
-      TextView symExcl = ViewBindings.findChildViewById(rootView, id);
-      if (symExcl == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_hash;
-      TextView symHash = ViewBindings.findChildViewById(rootView, id);
-      if (symHash == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_lparen;
-      TextView symLparen = ViewBindings.findChildViewById(rootView, id);
-      if (symLparen == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_minus;
-      TextView symMinus = ViewBindings.findChildViewById(rootView, id);
-      if (symMinus == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_percent;
-      TextView symPercent = ViewBindings.findChildViewById(rootView, id);
-      if (symPercent == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_period;
-      TextView symPeriod = ViewBindings.findChildViewById(rootView, id);
-      if (symPeriod == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_plus;
-      TextView symPlus = ViewBindings.findChildViewById(rootView, id);
-      if (symPlus == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_quest;
-      TextView symQuest = ViewBindings.findChildViewById(rootView, id);
-      if (symQuest == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_quote;
-      TextView symQuote = ViewBindings.findChildViewById(rootView, id);
-      if (symQuote == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_return;
-      TextView symReturn = ViewBindings.findChildViewById(rootView, id);
-      if (symReturn == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_rparen;
-      TextView symRparen = ViewBindings.findChildViewById(rootView, id);
-      if (symRparen == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_semi;
-      TextView symSemi = ViewBindings.findChildViewById(rootView, id);
-      if (symSemi == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_slash;
-      TextView symSlash = ViewBindings.findChildViewById(rootView, id);
-      if (symSlash == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_space;
-      TextView symSpace = ViewBindings.findChildViewById(rootView, id);
-      if (symSpace == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_star;
-      TextView symStar = ViewBindings.findChildViewById(rootView, id);
-      if (symStar == null) {
-        break missingId;
-      }
-
-      id = R.id.sym_under;
-      TextView symUnder = ViewBindings.findChildViewById(rootView, id);
-      if (symUnder == null) {
+      id = R.id.suggestion_bar;
+      LinearLayout suggestionBar = ViewBindings.findChildViewById(rootView, id);
+      if (suggestionBar == null) {
         break missingId;
       }
 
@@ -1212,17 +438,10 @@ public final class KeyboardViewBinding implements ViewBinding {
 
       return new KeyboardViewBinding((LinearLayout) rootView, aiInfoCard, aiInput, aiLimitBadge,
           aiLoading, aiMessagesContainer, aiScroll, btnCancelNote, btnClearClip, btnMode,
-          btnNewNote, btnSaveNote, btnSendAi, btnUseResponse, clipRecycler, clipStatus, key0, key1,
-          key2, key3, key4, key5, key6, key7, key8, key9, keyA, keyB, keyC, keyComma, keyD,
-          keyDelete, keyE, keyF, keyG, keyH, keyI, keyJ, keyK, keyL, keyM, keyN, keyO, keyP,
-          keyPeriod, keyQ, keyR, keyReturn, keyS, keyShift, keySpace, keySymbols, keyT, keyU, keyV,
-          keyW, keyX, keyY, keyZ, keyboardRoot, noteContentInput, noteTitleInput, notesEditView,
-          notesListView, notesRecycler, notesStatus, panelAi, panelClipboard, panelKeyboard,
-          panelNotes, panelSymbols, promptInput, sym0, sym1, sym2, sym3, sym4, sym5, sym6, sym7,
-          sym8, sym9, symAbc, symAmp, symAt, symColon, symComma, symDel2, symDollar, symDquote,
-          symEq, symExcl, symHash, symLparen, symMinus, symPercent, symPeriod, symPlus, symQuest,
-          symQuote, symReturn, symRparen, symSemi, symSlash, symSpace, symStar, symUnder, tabAi,
-          tabClipboard, tabGroup, tabKeyboard, tabNotes, toolbar);
+          btnNewNote, btnSaveNote, btnSendAi, btnUseResponse, clipRecycler, clipStatus,
+          keyboardRoot, keysView, noteContentInput, noteTitleInput, notesEditView, notesListView,
+          notesRecycler, notesStatus, panelAi, panelClipboard, panelNotes, promptInput, sug1, sug2,
+          sug3, suggestionBar, tabAi, tabClipboard, tabGroup, tabKeyboard, tabNotes, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

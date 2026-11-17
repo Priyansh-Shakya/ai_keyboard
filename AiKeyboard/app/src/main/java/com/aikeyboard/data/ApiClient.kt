@@ -162,7 +162,11 @@ class ApiClient(context: Context) {
     // ───────────────────────── chat (streaming) ─────────────────────────
 
     /** Streams the reply; [onDelta] is invoked on the main thread for every text chunk. */
-    suspend fun chatStream(messages: List<ChatMessage>, onDelta: suspend (String) -> Unit, onRemaining: ((Int) -> Unit)? = null): Result<String> =
+    suspend fun chatStream(
+        messages: List<ChatMessage>,
+        onRemaining: ((Int) -> Unit)? = null,
+        onDelta: suspend (String) -> Unit
+    ): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val body = gson.toJson(mapOf("messages" to messages.map {
@@ -209,6 +213,7 @@ class ApiClient(context: Context) {
         when {
             d == null || d.isJsonNull -> "Request failed ($code)"
             d.isJsonPrimitive -> d.asString
+            d.isJsonObject -> d.asJsonObject.get("message")?.asString ?: "Request failed ($code)"
             else -> "Invalid request ($code)"
         }
     } catch (e: Exception) {

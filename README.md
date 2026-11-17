@@ -156,3 +156,7 @@ This keyboard only sends text to the Anthropic API when you **explicitly tap ↓
 Internal Dev Notes:
 - Backend is hosted on render (shakyageneral@gmail.com)
 - Supabase , google cloud console projects are on main (priyanshartshakya@gmail.com)
+
+
+Production server URL:
+https://ai-keyboard-3npm.onrender.com/

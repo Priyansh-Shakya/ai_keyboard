@@ -27,3 +27,27 @@ build/
 # IDE files
 .idea/
 .vscode/
+
+
+/AiKeyboard/ai_keyboard.jks
+/AiKeyboard/key.properties
+.*jks# secrets
+        *.jks
+        *.keystore
+keystore.properties
+        .env
+        .env.*
+!.env.example
+
+# python
+        .venv/
+        __pycache__/
+
+# android
+AiKeyboard/local.properties
+AiKeyboard/build/
+        AiKeyboard/app/build/
+        AiKeyboard/.gradle/
+        AiKeyboard/.idea/
+        AiKeyboard/.backup_v5/
+        *.iml

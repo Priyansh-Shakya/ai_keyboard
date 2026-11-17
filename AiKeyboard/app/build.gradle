@@ -3,25 +3,37 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+
+def ks = new Properties()
+rootProject.file("keystore.properties").withInputStream { ks.load(it) }
+
+
 android {
     namespace 'com.aikeyboard'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.aikeyboard"
+        applicationId "com.drdwarfstudios.ai_keyboard"
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode 2
-        versionName "2.0"
+        versionName "1.0.0"
 
         // Emulator -> your laptop. For a real phone see README (adb reverse, or your server's https URL).
-        buildConfigField "String", "API_BASE_URL", "\"http://localhost:8000\""
+        buildConfigField "String", "API_BASE_URL", "\"https://ai-keyboard-3npm.onrender.com/\""
         // OAuth *Web* client ID from Google Cloud (see README). Leave empty to disable Google sign-in.
         buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", "\"\""
     }
 
+    signingConfigs { release {
+        storeFile rootProject.file(ks['storeFile'])
+        storePassword ks['storePassword']
+        keyAlias ks['keyAlias']; keyPassword ks['keyPassword']
+    } }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -56,3 +68,5 @@ dependencies {
     implementation 'androidx.credentials:credentials-play-services-auth:1.2.2'
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.0'
 }
+
+

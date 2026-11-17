@@ -6,14 +6,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
-import android.os.Handler
-import android.os.Looper
-import android.view.HapticFeedbackConstants
+import android.text.InputType
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.EditText
@@ -27,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aikeyboard.R
 import com.aikeyboard.clipboard.ClipboardAdapter
 import com.aikeyboard.data.ApiClient
+import com.aikeyboard.data.ApiException
 import com.aikeyboard.data.ChatMessage
 import com.aikeyboard.data.Note
 import com.aikeyboard.data.PrefsManager
@@ -38,14 +36,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 class AiKeyboardService : InputMethodService() {
 
     private enum class Tab { KEYBOARD, AI, NOTES, CLIPBOARD }
 
     // ── state ──
-    private var isShifted = false
-    private var isSymbolMode = false
     private var currentTab = Tab.KEYBOARD
 
     /** false = typing goes to the app (↑).  true = typing goes to the AI prompt (↓). */
@@ -61,52 +58,69 @@ class AiKeyboardService : InputMethodService() {
     private var editingNoteId: String? = null
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val repeatHandler = Handler(Looper.getMainLooper())
     private val api by lazy { ApiClient(this) }
     private lateinit var notesAdapter: NotesAdapter
     private lateinit var clipboardAdapter: ClipboardAdapter
-    private val letterViews = mutableListOf<Pair<TextView, String>>()
-    private var remainingRequests = 10
-    private var isPremiumUser = false
-    private var isCapsLock = false
-    private var lastShiftTapTime = 0L
-    private lateinit var aiLimitBadge: TextView
-    private lateinit var aiInfoCard: TextView
 
     private val clipboardManager by lazy { getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
         val clip = clipboardManager.primaryClip
         if (clip != null && clip.itemCount > 0) {
+            // Skip anything the source app marks sensitive (password managers, Android 13+).
+            val sensitive = try {
+                clip.description.extras?.getBoolean("android.content.extra.IS_SENSITIVE", false) == true
+            } catch (e: Exception) { false }
             val text = clip.getItemAt(0).text?.toString()
-            if (!text.isNullOrBlank()) {
+            if (!sensitive && !text.isNullOrBlank()) {
                 PrefsManager.addClipboardClip(this, text)
                 if (currentTab == Tab.CLIPBOARD) loadClipboard()
             }
         }
     }
 
+    // ── spelling / autocorrect state ──
+    private val spell = SpellEngine()
+    private val spellExec = Executors.newSingleThreadExecutor()
+    private val typingPrefs by lazy { getSharedPreferences("typing_prefs", Context.MODE_PRIVATE) }
+    private var spellOn = true               // off in password / URL / e-mail / number fields
+    private var autoCorrectOn = true
+    private val word = StringBuilder()       // letters of the word being typed (local mirror: no IPC per key)
+    private var wordClean = true             // false once a digit/symbol is part of this word
+    @Volatile private var suggestionVersion = 0
+    private var sugTexts = arrayOf("", "", "")
+    private var suggestionsShowing = false
+    private var lastAutoCorrectOriginal: String? = null
+    private var lastAutoCorrectReplacement: String? = null
+    private var lastBoundary = " "
+    private var canUndoAutoCorrect = false
+
     // ── views ──
     private lateinit var rootView: View
     private lateinit var tabGroup: View
+    private lateinit var suggestionBar: View
+    private lateinit var sug1: TextView
+    private lateinit var sug2: TextView
+    private lateinit var sug3: TextView
     private lateinit var tabKeyboard: TextView
     private lateinit var tabAi: TextView
     private lateinit var tabNotes: TextView
     private lateinit var tabClipboard: TextView
     private lateinit var promptInput: EditText
     private lateinit var btnMode: TextView
-    private lateinit var panelKeyboard: View
-    private lateinit var panelSymbols: View
+    private lateinit var keysView: KeyboardCanvasView
     private lateinit var panelAi: View
     private lateinit var panelNotes: View
     private lateinit var panelClipboard: View
-    private lateinit var keyReturn: TextView
-    private lateinit var symReturn: TextView
     private lateinit var aiScroll: ScrollView
     private lateinit var aiMessages: LinearLayout
     private lateinit var aiInput: EditText
     private lateinit var btnSendAi: TextView
     private lateinit var btnUseResponse: TextView
     private lateinit var aiLoading: View
+    private lateinit var aiLimitBadge: TextView
+    private lateinit var aiInfoCard: TextView
+    private var requestLimits: Int = 10
+    private var isPremium: Boolean = false
     private lateinit var notesRecycler: RecyclerView
     private lateinit var notesListView: View
     private lateinit var notesEditView: View
@@ -132,7 +146,7 @@ class AiKeyboardService : InputMethodService() {
         setupAiPanel()
         setupNotesPanel()
         setupClipboardPanel()
-        fetchUserLimits()
+        initSpell()
         try {
             clipboardManager.addPrimaryClipChangedListener(clipListener)
         } catch (e: Exception) {}
@@ -142,7 +156,22 @@ class AiKeyboardService : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         if (!::rootView.isInitialized) return
-        if (!restarting) showTab(Tab.KEYBOARD)
+        keysView.haptics = PrefsManager.isVibrationEnabled(this)
+        autoCorrectOn = typingPrefs.getBoolean("auto_correct", true)
+        spellOn = isSpellField(info)
+        canUndoAutoCorrect = false
+        resetWord()
+        if (!restarting) { keysView.reset(); showTab(Tab.KEYBOARD) }
+        fetchUserLimits()
+    }
+
+    override fun onUpdateSelection(
+        oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int,
+        candidatesStart: Int, candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        // User selected a range (long-press / drag): whatever word we were tracking is no longer under the caret.
+        if (newSelStart != newSelEnd && ::rootView.isInitialized) resetWord()
     }
 
     override fun onDestroy() {
@@ -150,22 +179,25 @@ class AiKeyboardService : InputMethodService() {
         try {
             clipboardManager.removePrimaryClipChangedListener(clipListener)
         } catch (e: Exception) {}
+        spellExec.shutdownNow()
         scope.cancel()
     }
 
     private fun bindViews() {
         fun <T : View> id(i: Int): T = rootView.findViewById(i)
         tabGroup = id(R.id.tab_group)
+        suggestionBar = id(R.id.suggestion_bar)
+        sug1 = id(R.id.sug_1); sug2 = id(R.id.sug_2); sug3 = id(R.id.sug_3)
         tabKeyboard = id(R.id.tab_keyboard); tabAi = id(R.id.tab_ai); tabNotes = id(R.id.tab_notes)
         tabClipboard = id(R.id.tab_clipboard)
         promptInput = id(R.id.prompt_input); btnMode = id(R.id.btn_mode)
-        panelKeyboard = id(R.id.panel_keyboard); panelSymbols = id(R.id.panel_symbols)
+        keysView = id(R.id.keys_view)
         panelAi = id(R.id.panel_ai); panelNotes = id(R.id.panel_notes)
         panelClipboard = id(R.id.panel_clipboard)
-        keyReturn = id(R.id.key_return); symReturn = id(R.id.sym_return)
         aiScroll = id(R.id.ai_scroll); aiMessages = id(R.id.ai_messages_container)
         aiInput = id(R.id.ai_input); btnSendAi = id(R.id.btn_send_ai)
         btnUseResponse = id(R.id.btn_use_response); aiLoading = id(R.id.ai_loading)
+        aiLimitBadge = id(R.id.ai_limit_badge); aiInfoCard = id(R.id.ai_info_card)
         notesRecycler = id(R.id.notes_recycler); notesListView = id(R.id.notes_list_view)
         notesEditView = id(R.id.notes_edit_view); notesStatus = id(R.id.notes_status)
         noteTitleInput = id(R.id.note_title_input); noteContentInput = id(R.id.note_content_input)
@@ -174,15 +206,13 @@ class AiKeyboardService : InputMethodService() {
         clipRecycler = id(R.id.clip_recycler)
         clipStatus = id(R.id.clip_status)
         btnClearClip = id(R.id.btn_clear_clip)
-        aiLimitBadge = id(R.id.ai_limit_badge)
-        aiInfoCard = id(R.id.ai_info_card)
     }
 
     // ── toolbar, tabs & layout ──
 
     private fun setupToolbar() {
         tabKeyboard.setOnClickListener { showTab(Tab.KEYBOARD) }
-        tabAi.setOnClickListener { showTab(Tab.AI); fetchUserLimits() }
+        tabAi.setOnClickListener { showTab(Tab.AI) }
         tabNotes.setOnClickListener { showTab(Tab.NOTES); showNotesList(); loadNotes() }
         tabClipboard.setOnClickListener { showTab(Tab.CLIPBOARD); loadClipboard() }
         btnMode.setOnClickListener { setAiMode(!aiMode) }
@@ -196,6 +226,7 @@ class AiKeyboardService : InputMethodService() {
     private fun setAiMode(on: Boolean) {
         if (on == aiMode) return
         aiMode = on
+        resetWord()
         if (on) {
             val draft = hostText()
             if (draft.isNotBlank()) {                       // move what's typed in the app into the prompt
@@ -217,6 +248,7 @@ class AiKeyboardService : InputMethodService() {
 
     private fun showTab(tab: Tab) {
         currentTab = tab
+        resetWord()
         setLocal(if (tab == Tab.KEYBOARD && aiMode) promptInput else null)
         val on = ContextCompat.getDrawable(this, R.drawable.bg_tab_selected)
         val off = ContextCompat.getDrawable(this, R.drawable.bg_tab_unselected)
@@ -227,6 +259,7 @@ class AiKeyboardService : InputMethodService() {
             v.setTextColor(if (t == tab) onColor else offColor)
         }
         refreshLayout()
+        if (tab == Tab.AI) fetchUserLimits()
     }
 
     private fun refreshLayout() {
@@ -234,15 +267,14 @@ class AiKeyboardService : InputMethodService() {
         val typingLocally = localTarget != null
         val showKeys = kb || typingLocally
 
-        tabGroup.visibility = if (kb && aiMode) View.GONE else View.VISIBLE
+        applyToolbarMode()
         promptInput.visibility = if (kb && aiMode) View.VISIBLE else View.GONE
         btnMode.visibility = if (kb) View.VISIBLE else View.GONE
         btnMode.text = if (aiMode) "↓" else "↑"
         btnMode.background = ContextCompat.getDrawable(
             this, if (aiMode) R.drawable.bg_key_accent else R.drawable.bg_key_special)
 
-        panelKeyboard.visibility = if (showKeys && !isSymbolMode) View.VISIBLE else View.GONE
-        panelSymbols.visibility = if (showKeys && isSymbolMode) View.VISIBLE else View.GONE
+        keysView.visibility = if (showKeys) View.VISIBLE else View.GONE
         panelAi.visibility = if (currentTab == Tab.AI) View.VISIBLE else View.GONE
         panelNotes.visibility = if (currentTab == Tab.NOTES) View.VISIBLE else View.GONE
         panelClipboard.visibility = if (currentTab == Tab.CLIPBOARD) View.VISIBLE else View.GONE
@@ -251,9 +283,15 @@ class AiKeyboardService : InputMethodService() {
         setHeightDp(panelNotes, if (typingLocally) 130 else 260)
         setHeightDp(panelClipboard, if (typingLocally) 130 else 260)
 
-        val glyph = if (localTarget === promptInput || localTarget === aiInput) "✦" else "↵"
-        keyReturn.text = glyph
-        symReturn.text = glyph
+        keysView.setReturnGlyph(if (localTarget === promptInput || localTarget === aiInput) "✦" else "↵")
+    }
+
+    /** Toolbar left side shows the tabs, or the suggestion strip while a word is being typed. */
+    private fun applyToolbarMode() {
+        val kb = currentTab == Tab.KEYBOARD
+        val strip = suggestionsShowing && kb && !aiMode
+        tabGroup.visibility = if ((kb && aiMode) || strip) View.GONE else View.VISIBLE
+        suggestionBar.visibility = if (strip) View.VISIBLE else View.GONE
     }
 
     private fun setHeightDp(v: View, dp: Int) {
@@ -293,75 +331,158 @@ class AiKeyboardService : InputMethodService() {
         canUndoAutoCorrect = false
     }
 
-    private val autoCorrectMap = mapOf(
-        "teh" to "the",
-        "dont" to "don't",
-        "im" to "I'm",
-        "youre" to "you're",
-        "cant" to "can't",
-        "wont" to "won't",
-        "taht" to "that",
-        "recieve" to "receive",
-        "seperate" to "separate",
-        "definately" to "definitely",
-        "occured" to "occurred",
-        "truely" to "truly",
-        "tomorow" to "tomorrow",
-        "wich" to "which",
-        "theif" to "thief",
-        "wierd" to "weird",
-        "hvae" to "have",
-        "adn" to "and",
-        "waht" to "what"
-    )
-    private var lastAutoCorrectOriginal: String? = null
-    private var lastAutoCorrectReplacement: String? = null
-    private var canUndoAutoCorrect = false
+    // ── spelling, suggestions & autocorrect ──
 
-    private fun handleSpace() {
-        val target = localTarget
-        if (target != null) {
-            commit(" ")
-            canUndoAutoCorrect = false
-        } else {
-            val ic = currentInputConnection
-            if (ic != null) {
-                ic.finishComposingText()
-                val before = ic.getTextBeforeCursor(30, 0)?.toString() ?: ""
-                val word = before.trimEnd().split(Regex("\\s+")).lastOrNull() ?: ""
-                val lowerWord = word.lowercase()
-                if (word.isNotEmpty() && autoCorrectMap.containsKey(lowerWord)) {
-                    val correction = autoCorrectMap[lowerWord]!!
-                    val finalCorrection = if (word[0].isUpperCase()) correction.replaceFirstChar { it.uppercase() } else correction
-
-                    lastAutoCorrectOriginal = word
-                    lastAutoCorrectReplacement = finalCorrection
-                    canUndoAutoCorrect = true
-
-                    ic.deleteSurroundingText(word.length, 0)
-                    ic.commitText("$finalCorrection ", 1)
-                    return
-                }
-            }
-            commit(" ")
-            canUndoAutoCorrect = false
+    /** Load the dictionary off the UI thread (it's ~1.3 MB), plus the words the user taught us. */
+    private fun initSpell() {
+        spellExec.execute {
+            try { assets.open("en_freq.txt").use { spell.load(it) } } catch (e: Exception) { }
+            spell.addUserWords(typingPrefs.getStringSet("user_words", emptySet()) ?: emptySet())
         }
     }
 
-    /** Deletes the selection if there is one, otherwise one character. */
+    private fun isSpellField(info: EditorInfo?): Boolean {
+        val t = info?.inputType ?: return true
+        if ((t and InputType.TYPE_MASK_CLASS) != InputType.TYPE_CLASS_TEXT) return false
+        if ((t and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0) return false
+        return when (t and InputType.TYPE_MASK_VARIATION) {
+            InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+            InputType.TYPE_TEXT_VARIATION_URI,
+            InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+            InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> false
+            else -> true
+        }
+    }
+
+    private fun resetWord() {
+        word.setLength(0)
+        wordClean = true
+        suggestionVersion++
+        if (suggestionsShowing) { suggestionsShowing = false; applyToolbarMode() }
+    }
+
+    /** Every character from the keyboard comes through here. */
+    private fun typeText(text: String) {
+        if (localTarget != null || !spellOn) { commit(text); return }
+        val c = text[0]
+        when {
+            text.length == 1 && (c.isLetter() || (c == '\'' && word.isNotEmpty())) -> {
+                commit(text); word.append(c); updateSuggestions()
+            }
+            text.length == 1 && c.isDigit() -> {                 // "4u", "b2b": not a word to correct
+                commit(text); word.append(c); wordClean = false; hideSuggestions()
+            }
+            text.length == 1 && c in ".,!?;:)" -> {
+                if (!applyAutoCorrect(text)) commit(text)
+                resetWord()
+            }
+            else -> { commit(text); resetWord() }                // @ # / _ - etc.: no correction around them
+        }
+    }
+
+    private fun handleSpace() {
+        if (localTarget != null || !spellOn) { commit(" "); return }
+        if (!applyAutoCorrect(" ")) commit(" ")
+        resetWord()
+    }
+
+    /**
+     * Replaces the finished word with its correction (and appends [boundary]). Never deletes text blindly:
+     * the characters before the caret must still be exactly the word we tracked.
+     */
+    private fun applyAutoCorrect(boundary: String): Boolean {
+        if (!autoCorrectOn || !wordClean || word.isEmpty()) return false
+        val typed = word.toString()
+        val fix = spell.correction(typed) ?: return false
+        val ic = currentInputConnection ?: return false
+        ic.finishComposingText()
+        val before = ic.getTextBeforeCursor(typed.length, 0)?.toString()
+        if (before != typed) return false
+        ic.deleteSurroundingText(typed.length, 0)
+        ic.commitText(fix + boundary, 1)
+        lastAutoCorrectOriginal = typed
+        lastAutoCorrectReplacement = fix
+        lastBoundary = boundary
+        canUndoAutoCorrect = true
+        return true
+    }
+
+    private fun updateSuggestions() {
+        if (!spellOn || localTarget != null || word.isEmpty() || !wordClean) { hideSuggestions(); return }
+        val typed = word.toString()
+        val v = ++suggestionVersion
+        spellExec.execute {
+            if (v != suggestionVersion) return@execute            // a newer keystroke superseded this one
+            val alts = spell.alternatives(typed, 2)
+            if (v != suggestionVersion) return@execute
+            rootView.post { if (v == suggestionVersion) showSuggestions(typed, alts) }
+        }
+    }
+
+    private fun showSuggestions(typed: String, alts: List<String>) {
+        sugTexts = arrayOf(typed, alts.getOrElse(0) { "" }, alts.getOrElse(1) { "" })
+        sug1.text = sugTexts[0]
+        sug2.text = sugTexts[1]
+        sug3.text = sugTexts[2]
+        if (!suggestionsShowing) { suggestionsShowing = true; applyToolbarMode() }
+    }
+
+    private fun hideSuggestions() {
+        suggestionVersion++
+        if (suggestionsShowing) { suggestionsShowing = false; applyToolbarMode() }
+    }
+
+    /** Tap a suggestion: swap the word you're typing for it (backspace right after undoes this). */
+    private fun applySuggestion(s: String) {
+        if (s.isEmpty() || word.isEmpty()) return
+        val typed = word.toString()
+        val ic = currentInputConnection ?: return
+        ic.finishComposingText()
+        if (ic.getTextBeforeCursor(typed.length, 0)?.toString() == typed) {
+            ic.deleteSurroundingText(typed.length, 0)
+            ic.commitText("$s ", 1)
+            lastAutoCorrectOriginal = typed
+            lastAutoCorrectReplacement = s
+            lastBoundary = " "
+            canUndoAutoCorrect = true
+        }
+        resetWord()
+    }
+
+    /** Tap the typed word (left slot): keep it as written, and learn it so it's never "corrected". */
+    private fun keepTypedWord() {
+        if (word.isEmpty()) return
+        val typed = word.toString()
+        if (wordClean && typed.length >= 3 && !spell.isKnown(typed.lowercase())) learnWord(typed)
+        commit(" ")
+        resetWord()
+    }
+
+    private fun learnWord(w: String) {
+        spell.learn(w)
+        val all = spell.userWordSnapshot()
+        if (all.size <= 5000) typingPrefs.edit().putStringSet("user_words", all).apply()
+    }
+
+    /** Deletes the selection if there is one, otherwise one character. Right after an autocorrect: undo it. */
     private fun backspace(first: Boolean = true) {
-        if (canUndoAutoCorrect && lastAutoCorrectOriginal != null && lastAutoCorrectReplacement != null) {
+        if (canUndoAutoCorrect) {
+            val original = lastAutoCorrectOriginal
+            val replacement = lastAutoCorrectReplacement
             val ic = currentInputConnection
-            if (ic != null) {
-                val replacement = lastAutoCorrectReplacement!!
-                val original = lastAutoCorrectOriginal!!
-                val before = ic.getTextBeforeCursor(replacement.length + 5, 0)?.toString() ?: ""
-                if (before.endsWith("$replacement ")) {
-                    ic.deleteSurroundingText(replacement.length + 1, 0)
+            if (original != null && replacement != null && ic != null) {
+                val tail = replacement + lastBoundary
+                if (ic.getTextBeforeCursor(tail.length, 0)?.toString() == tail) {
+                    ic.deleteSurroundingText(tail.length, 0)
                     ic.commitText(original, 1)
+                    if (original.length >= 2 && original.all { it.isLetter() }) learnWord(original)   // "I meant that"
                     canUndoAutoCorrect = false
                     lastAutoCorrectOriginal = null
                     lastAutoCorrectReplacement = null
+                    word.setLength(0); word.append(original); wordClean = true   // keep editing that word
+                    updateSuggestions()
                     return
                 }
             }
@@ -376,10 +497,14 @@ class AiKeyboardService : InputMethodService() {
             else if (s > 0) text.delete(s - Character.charCount(Character.codePointBefore(text, s)), s)
         } else {
             sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)       // handles selections natively in every app
+            if (word.isNotEmpty()) { word.deleteCharAt(word.length - 1); if (word.isEmpty()) wordClean = true }
+            updateSuggestions()
         }
     }
 
     private fun deleteWord() {
+        resetWord()
+        canUndoAutoCorrect = false
         val et = localTarget
         if (et != null) {
             val text = et.text
@@ -425,101 +550,9 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
-    /** Press = delete char; keep pressed and drag left = delete word by word (like Gboard). */
-    @SuppressLint("ClickableViewAccessibility")
-    private fun makeSwipeableDelete(key: View) {
-        var startX = 0f
-        var isWordDelete = false
-        var repeater: Runnable? = null
-
-        key.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.isPressed = true
-                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
-                    startX = ev.rawX
-                    isWordDelete = false
-                    backspace(true)
-
-                    val r = object : Runnable {
-                        override fun run() {
-                            if (isWordDelete) {
-                                deleteWord()
-                                repeatHandler.postDelayed(this, 120)
-                            } else {
-                                backspace(false)
-                                repeatHandler.postDelayed(this, 45)
-                            }
-                        }
-                    }
-                    repeater = r
-                    repeatHandler.postDelayed(r, 380)
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val deltaX = ev.rawX - startX
-                    if (!isWordDelete && deltaX < -80f) {
-                        isWordDelete = true
-                        haptic(v, HapticFeedbackConstants.LONG_PRESS)
-                        deleteWord()
-                    }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    v.isPressed = false
-                    repeater?.let { repeatHandler.removeCallbacks(it) }
-                    repeater = null
-                    isWordDelete = false
-                }
-            }
-            true
-        }
-    }
-
-    /** Slide finger on spacebar to move cursor left or right (like Gboard). */
-    @SuppressLint("ClickableViewAccessibility")
-    private fun makeSpacebarCursorControl(key: View) {
-        var startX = 0f
-        var lastMoveX = 0f
-        var isCursorControl = false
-        val threshold = 35f // pixels per cursor step
-
-        key.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.isPressed = true
-                    startX = ev.rawX
-                    lastMoveX = ev.rawX
-                    isCursorControl = false
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val totalDelta = ev.rawX - startX
-                    if (!isCursorControl && kotlin.math.abs(totalDelta) > 25f) {
-                        isCursorControl = true
-                        haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
-                    }
-                    if (isCursorControl) {
-                        val stepDelta = ev.rawX - lastMoveX
-                        if (stepDelta <= -threshold) {
-                            lastMoveX = ev.rawX
-                            moveCursor(-1)
-                        } else if (stepDelta >= threshold) {
-                            lastMoveX = ev.rawX
-                            moveCursor(1)
-                        }
-                    }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    v.isPressed = false
-                    if (!isCursorControl) {
-                        handleSpace()
-                    }
-                    isCursorControl = false
-                }
-            }
-            true
-        }
-    }
-
     private fun moveCursor(direction: Int) {
+        resetWord()
+        canUndoAutoCorrect = false
         val et = localTarget
         if (et != null) {
             val sel = et.selectionStart
@@ -540,7 +573,7 @@ class AiKeyboardService : InputMethodService() {
             localTarget === aiInput -> submitAiInput()
             localTarget === noteTitleInput -> activateLocal(noteContentInput)
             localTarget === noteContentInput -> commit("\n")
-            else -> hostEnter()
+            else -> { applyAutoCorrect(""); resetWord(); hostEnter() }
         }
     }
 
@@ -563,144 +596,19 @@ class AiKeyboardService : InputMethodService() {
         return false
     }
 
-    private fun haptic(v: View, feedbackConstant: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
-        if (PrefsManager.isVibrationEnabled(this)) {
-            v.performHapticFeedback(feedbackConstant)
-        }
-    }
-
-    /** Fires on finger-DOWN (like real keyboards): no lost taps from release-slop, lower latency. */
-    @SuppressLint("ClickableViewAccessibility")
-    private fun onKeyDown(key: View, action: () -> Unit) {
-        key.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.isPressed = true
-                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
-                    action()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.isPressed = false
-            }
-            true
-        }
-    }
-
-    /** Tap acts on release; holding for 0.4s runs [onHold] instead (if it returns true it was handled). */
-    @SuppressLint("ClickableViewAccessibility")
-    private fun onTapOrHold(key: View, onTap: () -> Unit, onHold: () -> Boolean) {
-        var holder: Runnable? = null
-        var held = false
-        key.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.isPressed = true
-                    held = false
-                    haptic(v, HapticFeedbackConstants.KEYBOARD_TAP)
-                    val r = Runnable {
-                        held = onHold()
-                        if (held) haptic(v, HapticFeedbackConstants.LONG_PRESS)
-                    }
-                    holder = r
-                    repeatHandler.postDelayed(r, 400)
-                }
-                MotionEvent.ACTION_UP -> {
-                    v.isPressed = false
-                    holder?.let { repeatHandler.removeCallbacks(it) }
-                    holder = null
-                    if (!held) onTap()
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    v.isPressed = false
-                    holder?.let { repeatHandler.removeCallbacks(it) }
-                    holder = null
-                }
-            }
-            true
-        }
-    }
-
     private fun setupKeyboard() {
-        "1234567890".forEach { c ->
-            val v = rootView.findViewById<TextView>(resources.getIdentifier("key_$c", "id", packageName))
-            if (v != null) {
-                onKeyDown(v) { commit(c.toString()) }
-            }
+        keysView.listener = object : KeyboardCanvasView.Listener {
+            override fun onText(text: String) = typeText(text)
+            override fun onSpace() = handleSpace()
+            override fun onBackspace(first: Boolean) = backspace(first)
+            override fun onDeleteWord() = deleteWord()
+            override fun onCursorMove(direction: Int) = moveCursor(direction)
+            override fun onReturnTap() = enterKey()
+            override fun onReturnHold() = holdEnter()
         }
-        "qwertyuiopasdfghjklzxcvbnm".forEach { c ->
-            val v = rootView.findViewById<TextView>(resources.getIdentifier("key_$c", "id", packageName))
-            if (v != null) {
-                letterViews.add(v to c.toString())
-                onKeyDown(v) {
-                    commit(if (isShifted) c.toString().uppercase() else c.toString())
-                    if (isShifted && !isCapsLock) {
-                        isShifted = false
-                        updateShift()
-                    }
-                }
-            }
-        }
-        listOf(R.id.key_comma to ",", R.id.key_period to ".").forEach { (id, s) ->
-            val v = rootView.findViewById<TextView>(id)
-            if (v != null) onKeyDown(v) { commit(s) }
-        }
-        val spaceKey = rootView.findViewById<View>(R.id.key_space)
-        if (spaceKey != null) makeSpacebarCursorControl(spaceKey)
-        val delKey = rootView.findViewById<View>(R.id.key_delete)
-        if (delKey != null) makeSwipeableDelete(delKey)
-        if (keyReturn != null) onTapOrHold(keyReturn, onTap = { enterKey() }, onHold = { holdEnter() })
-        val shiftKey = rootView.findViewById<View>(R.id.key_shift)
-        if (shiftKey != null) {
-            onKeyDown(shiftKey) {
-                val now = System.currentTimeMillis()
-                if (now - lastShiftTapTime < 300) {
-                    isCapsLock = !isCapsLock
-                    isShifted = isCapsLock
-                } else {
-                    if (isCapsLock) {
-                        isCapsLock = false
-                        isShifted = false
-                    } else {
-                        isShifted = !isShifted
-                    }
-                }
-                lastShiftTapTime = now
-                updateShift()
-            }
-        }
-        val symKey = rootView.findViewById<TextView>(R.id.key_symbols)
-        symKey?.setOnClickListener { isSymbolMode = true; refreshLayout() }
-
-        // Symbol panel: every single-character key types its own label.
-        val special = setOf(R.id.sym_del2, R.id.sym_abc, R.id.sym_space, R.id.sym_return)
-        forEachLeaf(panelSymbols) { v ->
-            if (v is TextView && v.id != View.NO_ID && v.id !in special) {
-                onKeyDown(v) { commit(v.text.toString()) }
-            }
-        }
-        val symSpace = rootView.findViewById<View>(R.id.sym_space)
-        if (symSpace != null) makeSpacebarCursorControl(symSpace)
-        val symDel = rootView.findViewById<View>(R.id.sym_del2)
-        if (symDel != null) makeSwipeableDelete(symDel)
-        if (symReturn != null) onTapOrHold(symReturn, onTap = { enterKey() }, onHold = { holdEnter() })
-        val symAbc = rootView.findViewById<TextView>(R.id.sym_abc)
-        symAbc?.setOnClickListener { isSymbolMode = false; refreshLayout() }
-    }
-
-    private fun forEachLeaf(v: View, fn: (View) -> Unit) {
-        if (v is ViewGroup) {
-            for (i in 0 until v.childCount) forEachLeaf(v.getChildAt(i), fn)
-        } else {
-            fn(v)
-        }
-    }
-
-    private fun updateShift() {
-        letterViews.forEach { (v, c) -> v.text = if (isShifted) c.uppercase() else c }
-        val key = rootView.findViewById<TextView>(R.id.key_shift)
-        if (key != null) {
-            key.text = if (isCapsLock) "⇪" else "⇧"
-            key.setTextColor(ContextCompat.getColor(this, if (isShifted) R.color.brand_accent else R.color.text_secondary))
-        }
+        sug1.setOnClickListener { keepTypedWord() }
+        sug2.setOnClickListener { applySuggestion(sugTexts[1]) }
+        sug3.setOnClickListener { applySuggestion(sugTexts[2]) }
     }
 
     private fun hostText(): String {
@@ -720,8 +628,45 @@ class AiKeyboardService : InputMethodService() {
 
     // ── AI panel ──
 
+    private fun fetchUserLimits() {
+        if (!PrefsManager.isLoggedIn(this)) return
+        scope.launch {
+            api.getUserLimits().onSuccess { limits ->
+                updateUserLimits(limits.requestLimits, limits.premium)
+            }.onFailure {
+                if (it is ApiException && it.code == 403) {
+                    updateUserLimits(0, false)
+                }
+            }
+        }
+    }
+
+    private fun updateUserLimits(rem: Int, premium: Boolean) {
+        requestLimits = rem
+        isPremium = premium
+        aiLimitBadge.text = if (premium) "⚡ ∞" else "⚡ $rem"
+
+        val isLimitExceeded = !premium && rem <= 0
+        val enableInput = !isLimitExceeded
+
+        aiInput.isEnabled = enableInput
+        btnSendAi.isEnabled = enableInput
+
+        if (isLimitExceeded) {
+            aiInput.hint = "Request limit reached (0 remaining)"
+            if (localTarget === aiInput) deactivateLocal()
+        } else {
+            aiInput.hint = "Ask AI anything…"
+        }
+    }
+
     /** Return key in ↓ mode: send the prompt, close the keys, show the reply. */
     private fun submitPrompt() {
+        if (!isPremium && requestLimits <= 0) {
+            toast("Request limit reached. Upgrade to premium for unlimited requests.")
+            updateUserLimits(0, isPremium)
+            return
+        }
         val text = promptInput.text.toString().trim()
         if (text.isEmpty()) return
         promptInput.setText("")
@@ -733,13 +678,12 @@ class AiKeyboardService : InputMethodService() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupAiPanel() {
         makeLocalInput(aiInput)
-        aiLimitBadge.setOnClickListener {
-            aiInfoCard.visibility = if (aiInfoCard.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-        }
-        fetchUserLimits()
         aiScroll.setOnTouchListener { _, ev ->                   // tap the replies = hide keys, read in peace
             if (ev.action == MotionEvent.ACTION_DOWN && localTarget != null) deactivateLocal()
             false
+        }
+        aiLimitBadge.setOnClickListener {
+            aiInfoCard.visibility = if (aiInfoCard.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
         btnSendAi.setOnClickListener { submitAiInput() }
         btnUseResponse.setOnClickListener {                      // insert last reply into the app's field
@@ -750,32 +694,12 @@ class AiKeyboardService : InputMethodService() {
         }
     }
 
-    private fun fetchUserLimits() {
-        scope.launch {
-            api.getUserLimits().onSuccess { limits ->
-                remainingRequests = limits.requestLimits
-                isPremiumUser = limits.premium
-                updateLimitBadge()
-            }
-        }
-    }
-
-    private fun setAiInputEnabled(enabled: Boolean) {
-        aiInput.isEnabled = enabled
-        aiInput.hint = if (enabled) "Ask AI anything…" else "Limit reached. Upgrade in app."
-        btnSendAi.isEnabled = enabled
-    }
-
-    private fun updateLimitBadge() {
-        aiLimitBadge.text = if (isPremiumUser) "⚡ ∞" else "⚡ $remainingRequests"
-        if (!isPremiumUser && remainingRequests <= 0) {
-            setAiInputEnabled(false)
-        } else {
-            setAiInputEnabled(true)
-        }
-    }
-
     private fun submitAiInput() {
+        if (!isPremium && requestLimits <= 0) {
+            toast("Request limit reached. Upgrade to premium for unlimited requests.")
+            updateUserLimits(0, isPremium)
+            return
+        }
         val text = aiInput.text.toString().trim()
         if (text.isEmpty()) return
         aiInput.setText("")
@@ -801,29 +725,31 @@ class AiKeyboardService : InputMethodService() {
 
     private fun sendToAi(prompt: String) {
         if (chatJob?.isActive == true) { toast("Wait for the current reply…"); return }
-        if (!isPremiumUser && remainingRequests <= 0) {
-            toast("Request limit reached. Upgrade to premium.")
+        if (!isPremium && requestLimits <= 0) {
+            toast("Request limit reached. Upgrade to premium for unlimited requests.")
+            updateUserLimits(0, isPremium)
             return
         }
+
+        if (!isPremium) {
+            updateUserLimits(maxOf(0, requestLimits - 1), isPremium)
+        }
+
         addBubble(prompt, true)
         chatHistory.add(ChatMessage("user", prompt))
         val bubble = addBubble("", false)
         val body = bubble.findViewById<TextView>(R.id.bubble_text)
         aiLoading.visibility = View.VISIBLE
 
-        if (!isPremiumUser) {
-            remainingRequests = maxOf(0, remainingRequests - 1)
-            updateLimitBadge()
-        }
-
         chatJob = scope.launch {
             val sb = StringBuilder()
             val result = api.chatStream(
                 messages = chatHistory.toList(),
-                onDelta = { d -> sb.append(d); body.text = sb.toString(); scrollAiToBottom() },
                 onRemaining = { rem ->
-                    remainingRequests = rem
-                    updateLimitBadge()
+                    updateUserLimits(rem, isPremium)
+                },
+                onDelta = { d ->
+                    sb.append(d); body.text = sb.toString(); scrollAiToBottom()
                 }
             )
             aiLoading.visibility = View.GONE
@@ -834,24 +760,16 @@ class AiKeyboardService : InputMethodService() {
                 } else {
                     chatHistory.add(ChatMessage("assistant", full))
                     lastAiResponse = full
-                    bubble.findViewById<TextView>(R.id.bubble_copy).apply {
-                        visibility = View.VISIBLE
-                        text = "📋 copy"
-                        setOnClickListener {
-                            copyToClipboard(full)
-                            text = "✓ copied"
-                            postDelayed({ text = "📋 copy" }, 1500)
-                        }
-                    }
+                    val copyBtn = bubble.findViewById<TextView>(R.id.bubble_copy)
+                    copyBtn.visibility = View.VISIBLE
+                    copyBtn.setOnClickListener { copyToClipboard(copyBtn, full) }
                 }
-            }.onFailure { err ->
-                val msg = err.message ?: "Something went wrong"
-                body.text = "⚠ $msg"
-                if (msg.contains("limit reached", ignoreCase = true) || msg.contains("403") || msg.contains("limit")) {
-                    body.text = "⚠ Request limit reached. Upgrade to premium to continue."
-                    setAiInputEnabled(false)
-                }
+            }.onFailure {
+                body.text = "⚠ ${it.message ?: "Something went wrong"}"
                 chatHistory.removeAt(chatHistory.lastIndex)      // keep user/assistant alternation valid
+                if (it is ApiException && it.code == 403) {
+                    updateUserLimits(0, isPremium)
+                }
             }
             scrollAiToBottom()
         }
@@ -859,10 +777,16 @@ class AiKeyboardService : InputMethodService() {
 
     private fun scrollAiToBottom() { aiScroll.post { aiScroll.fullScroll(View.FOCUS_DOWN) } }
 
-    private fun copyToClipboard(text: String) {
+    private fun copyToClipboard(btn: TextView, text: String) {
         (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
             .setPrimaryClip(ClipData.newPlainText("AI reply", text))
+        btn.text = "✓ copied"
+        btn.setTextColor(ContextCompat.getColor(this, R.color.brand_green))
         toast("Copied")
+        btn.postDelayed({
+            btn.text = "copy"
+            btn.setTextColor(ContextCompat.getColor(this, R.color.brand_accent))
+        }, 1500)
     }
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
